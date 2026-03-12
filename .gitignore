@@ -1,0 +1,57 @@
+# === Betriebssystem ===
+.DS_Store
+Thumbs.db
+._*
+.Spotlight-V100
+.Trashes
+
+# === IDE / Editor ===
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# === Claude Code (lokal) ===
+.claude/settings.local.json
+
+# === Python ===
+__pycache__/
+*.pyc
+
+# === Backups ===
+*.bak.md
+*.bak
+
+# === PDFs (Copyright) ===
+sources/pdfs/*.pdf
+!sources/pdfs/.gitkeep
+
+# === LaTeX Build-Artefakte ===
+*.aux
+*.log
+*.fls
+*.fdb_latexmk
+*.out
+*.toc
+*.lof
+*.lot
+*.xdv
+*.synctex.gz
+*.bbl
+*.blg
+*.bcf
+*.run.xml
+
+# === LaTeX-Output (generiert) ===
+output/phase-07-latex/latex/thesis.pdf
+output/phase-07-latex/latex/*.aux
+output/phase-07-latex/latex/*.log
+output/phase-07-latex/latex/*.xdv
+output/phase-07-latex/latex/*.fls
+output/phase-07-latex/latex/*.fdb_latexmk
+output/phase-07-latex/latex/*.out
+output/phase-07-latex/latex/*.toc
+output/phase-07-latex/latex/*.lof
+output/phase-07-latex/latex/*.lot
+output/phase-07-latex/latex/*.synctex.gz

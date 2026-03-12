@@ -1,0 +1,14 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -c \"\nimport json, os, sys\ntry:\n    if not os.path.exists('output/progress.json'):\n        print(json.dumps({'message': 'Willkommen beim Scientific Writing Framework! Starte mit /setup um dein Projekt einzurichten.'}))\n        sys.exit(0)\n    with open('output/progress.json') as f:\n        data = json.load(f)\n    phase = data.get('aktuelle_phase', 0)\n    if phase == 0:\n        msg = 'Willkommen zurück! Dein Projekt ist eingerichtet. Nutze /next um fortzufahren oder /status für den aktuellen Stand.'\n    else:\n        msg = f'Projekt geladen. Aktuelle Phase: {phase}/7. Nutze /next oder /status.'\n    print(json.dumps({'message': msg}))\nexcept Exception:\n    print(json.dumps({'message': 'Scientific Writing Framework geladen. Nutze /status für den aktuellen Stand.'}))\n\" 2>/dev/null || echo '{\"message\": \"Scientific Writing Framework geladen.\"}'"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,69 @@
+# === Scientific Writing Framework - Projektkonfiguration ===
+# Diese Datei wird von /setup automatisch generiert.
+# Du kannst sie auch manuell bearbeiten -- Änderungen werden beim nächsten /next berücksichtigt.
+#
+# Starte /setup um diese Datei interaktiv auszufüllen.
+
+projekt:
+  titel: ""                             # Wird in Phase 1/2 festgelegt
+  sprache: "de"                         # de (Englisch-Support in Planung)
+  typ: ""                               # seminararbeit | hausarbeit | bachelor | master | dissertation
+  methodik: ""                          # literatur | empirisch-qualitativ | empirisch-quantitativ
+
+quellen:
+  workflow: ""                          # bibtex | pdf-extraktion | manuell | keine
+  import_pfad: ""                       # Pfad zur .bib oder Zotero-Exportdatei
+
+latex:
+  auto_compile: true                    # Automatische Neukompilierung bei .tex-Änderungen
+  installation_geprüft: false          # Wird von /setup oder /compile gesetzt
+
+autor:
+  name: ""
+  matrikelnummer: ""
+  hochschule: ""
+  fakultaet: ""
+  studiengang: ""
+
+betreuung:
+  erstgutachter: ""
+  zweitgutachter: ""
+
+abgabe:
+  datum: ""                             # Format: TT.MM.JJJJ
+  ort: ""
+
+formatierung:
+  zitationsstil: ""                     # harvard-inline | apa7 | ieee | chicago
+  seitenumfang:
+    min: 40
+    max: 60
+  schriftart: "Times New Roman"
+  schriftgroesse: 12
+  zeilenabstand: 1.5
+  seitenränder:
+    oben: 2.5                           # in cm
+    unten: 2.5
+    links: 2.5
+    rechts: 2.5
+
+verzeichnisse:
+  inhaltsverzeichnis: true
+  abbildungsverzeichnis: true
+  tabellenverzeichnis: true
+  abkuerzungsverzeichnis: true
+  literaturverzeichnis: true
+  abstract: false                        # Abstract/Zusammenfassung vor der Einleitung
+  hilfsmittelverzeichnis: false         # Nur bei bestimmten Hochschulen (z.B. HTWD)
+  selbststaendigkeitserklaerung: true
+  sperrvermerk: false
+
+logo:
+  pfad: ""                              # z.B. "assets/img/logo.jpg" -- wird automatisch erkannt
+  erkannt: false
+
+fortschritt:
+  aktuelle_phase: 0                     # 0 = Noch nicht eingerichtet
+  abgeschlossene_phasen: []
+  gestartet_am: ""
+  letztes_update: ""
