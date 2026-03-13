@@ -5,48 +5,9 @@
 
 Deine wissenschaftliche Arbeit, von der ersten Idee bis zum fertigen PDF. Komplett im Terminal mit [Claude Code](https://claude.com/claude-code).
 
-Du triffst die Entscheidungen und lieferst die Quellen. Claude übernimmt Strukturierung, Kapitelplanung, wissenschaftliches Schreiben, Qualitätsprüfung und LaTeX-Export. Ein durchgehender Workflow für jede Abschlussarbeit.
+Du triffst die Entscheidungen und lieferst die Quellen. Claude übernimmt Strukturierung, Kapitelplanung, wissenschaftliches Schreiben, Qualitätsprüfung und LaTeX-Export. Ein durchgehender Workflow für Seminararbeiten, Hausarbeiten, Bachelorarbeiten, Masterarbeiten und Dissertationen.
 
 > **English:** AI-powered academic writing framework for [Claude Code](https://claude.com/claude-code). Supports seminar papers through dissertations. Currently German-language only.
-
-## Unterstützte Arbeitstypen
-
-| Typ | Seiten | Quellen |
-|-----|--------|---------|
-| Seminararbeit | 10 bis 20 | Optional |
-| Hausarbeit | 15 bis 25 | Optional |
-| Bachelorarbeit | 30 bis 60 | Empfohlen |
-| Masterarbeit | 50 bis 100 | Empfohlen |
-| Dissertation | 150+ | Erforderlich |
-
-## Features
-
-- **7-Phasen-Workflow** von Brainstorming bis PDF
-- **13 Slash Commands** für jeden Schritt
-- **Interaktives Setup** mit geführtem Interview und Multiple-Choice-Fragen
-- **Verschränktes Arbeiten** (Kapitel einzeln planen und direkt schreiben)
-- **Flexible Quellenarbeit** (BibTeX, Zotero, PDF-Extraktion, manuell oder ohne Quellen)
-- **Konfigurierbar** für jede Hochschule und jeden Zitationsstil
-- **3 parallele Reviewer** für Sprache, Zitationen und Argumentation
-- **LaTeX-Export** mit automatischer PDF-Erstellung
-- **Draft-Kompilierung** für PDF-Vorschau auch mit unvollständigen Kapiteln
-- **Self-Healing** erkennt und repariert inkonsistente Projektzustände
-
-## Workflow
-
-`/setup` · `/next` · `/approve` · `/next` · ... · `/compile` · PDF
-
-| Phase | Was passiert |
-|-------|-------------|
-| Setup | Interaktives Interview (ca. 5 Minuten) |
-| 1 · Brainstorming | Thema und Forschungsfragen entwickeln |
-| 2 · Gliederung | Kapitelstruktur erstellen |
-| 3 · Zitat-Zuordnung | Quellen den Kapiteln zuweisen* |
-| 4+5 · Planung + Schreiben | Kapitel einzeln planen und direkt schreiben |
-| 6 · Qualitätsprüfung | 3 Agenten prüfen parallel |
-| 7 · Finalisierung | LaTeX-Export und PDF |
-
-*wird bei "keine Quellen" automatisch übersprungen
 
 ## Schnellstart
 
@@ -71,7 +32,7 @@ claude
 /setup
 ```
 
-Das interaktive Interview führt dich durch alle Einstellungen. Jede Frage bietet dir Auswahlmöglichkeiten, die du mit einem Klick bestätigen oder frei beantworten kannst: Arbeitstyp, Methodik, Zitationsstil, Quellen-Workflow, Formatierung und mehr.
+Das interaktive Interview führt dich in etwa 5 Minuten durch alle Einstellungen: Arbeitstyp, Seitenumfang, Methodik, Zitationsstil, Quellen-Workflow, Formatierung und mehr. Jede Frage bietet dir Auswahlmöglichkeiten, die du mit einem Klick bestätigen oder frei beantworten kannst.
 
 ### 4. Los geht's
 
@@ -79,12 +40,37 @@ Das interaktive Interview führt dich durch alle Einstellungen. Jede Frage biete
 /next
 ```
 
-## Voraussetzungen
+Ab hier wiederholst du `/next` und `/approve`, bis die Arbeit fertig ist.
 
-- [Claude Code CLI](https://claude.com/claude-code) installiert
-- **LaTeX** für PDF-Export (wird bei `/setup` oder `/compile` automatisch geprüft, Installation wird angeboten)
-  - macOS: `brew install --cask mactex-no-gui`
-  - Linux: `sudo apt install texlive-xetex texlive-fonts-extra texlive-lang-german latexmk`
+## Workflow
+
+`/setup` · `/next` · `/approve` · `/next` · ... · `/compile` · PDF
+
+| Phase | Was passiert |
+|-------|-------------|
+| Setup | Interaktives Interview (ca. 5 Minuten) |
+| 1 · Brainstorming | Thema und Forschungsfragen entwickeln |
+| 2 · Gliederung | Kapitelstruktur erstellen |
+| 3 · Zitat-Zuordnung | Quellen den Kapiteln zuweisen* |
+| 4+5 · Planung + Schreiben | Kapitel einzeln planen und direkt schreiben |
+| 6 · Qualitätsprüfung | 3 Agenten prüfen parallel |
+| 7 · Finalisierung | LaTeX-Export und PDF |
+
+*Phase 3 wird automatisch übersprungen wenn du im Setup "keine Quellen" gewählt hast.
+
+## Features
+
+- **7-Phasen-Workflow** von Brainstorming bis PDF
+- **13 Slash Commands** für jeden Schritt
+- **Interaktives Setup** mit geführtem Interview und Multiple-Choice-Fragen
+- **Verschränktes Arbeiten** (Kapitel einzeln planen und direkt schreiben)
+- **Flexible Quellenarbeit** (BibTeX, Zotero, PDF-Extraktion, manuell oder ohne Quellen)
+- **4 Zitationsstile** (Harvard Inline, APA 7, IEEE, Chicago)
+- **Konfigurierbar** für jede Hochschule (Ränder, Schriftart, Deckblatt, Logo)
+- **3 parallele Reviewer** für Sprache, Zitationen und Argumentation
+- **LaTeX-Export** mit automatischer PDF-Erstellung
+- **Draft-Kompilierung** für PDF-Vorschau auch mit unvollständigen Kapiteln
+- **Self-Healing** erkennt und repariert inkonsistente Projektzustände
 
 ## Befehle
 
@@ -116,6 +102,13 @@ Vier Wege:
 2. **Zotero-Import** (CSV, RIS oder BibTeX aus Zotero)
 3. **PDF-Analyse** (Claude extrahiert Metadaten und Zitate)
 4. **Manuell** (schrittweise Eingabe)
+
+## Voraussetzungen
+
+- [Claude Code CLI](https://claude.com/claude-code) installiert
+- **LaTeX** für PDF-Export (wird bei `/setup` oder `/compile` automatisch geprüft, Installation wird angeboten)
+  - macOS: `brew install --cask mactex-no-gui`
+  - Linux: `sudo apt install texlive-xetex texlive-fonts-extra texlive-lang-german latexmk`
 
 ## Dokumentation
 

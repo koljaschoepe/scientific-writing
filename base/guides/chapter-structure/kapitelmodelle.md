@@ -41,7 +41,7 @@
 
 ## 3-Kapitel-Modell (Kurzarbeiten)
 
-Für Arbeiten bis ca. 30 Seiten.
+Für Arbeiten bis ca. 25 Seiten.
 
 ```
 1. Einleitung
@@ -51,7 +51,7 @@ Für Arbeiten bis ca. 30 Seiten.
 
 ## 4-Kapitel-Modell (Standard kompakt)
 
-Für Arbeiten von 30-45 Seiten.
+Für Arbeiten von 40-50 Seiten.
 
 ```
 1. Einleitung

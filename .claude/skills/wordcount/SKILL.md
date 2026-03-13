@@ -31,7 +31,7 @@ Verwende den Mittelwert (275) als Standard.
 Erwartungen an den Arbeitstyp (aus config.yaml):
 - seminararbeit: 10-20 Seiten (2.750-5.500 Wörter)
 - hausarbeit: 15-25 Seiten (4.125-6.875 Wörter)
-- bachelor: 30-60 Seiten (8.250-16.500 Wörter)
+- bachelor: 40-60 Seiten (11.000-16.500 Wörter)
 - master: 50-100 Seiten (13.750-27.500 Wörter)
 - dissertation: 150+ Seiten (41.250+ Wörter)
 
