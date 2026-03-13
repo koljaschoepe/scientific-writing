@@ -142,8 +142,8 @@ Methodik und Ergebnisse getrennt.
 | Seminararbeit (mit Quellen) | 10-20 | Seminararbeit Variante A |
 | Seminararbeit (ohne Quellen) | 10-20 | Seminararbeit Variante B |
 | Hausarbeit | 15-25 | Hausarbeit-Modell |
-| Bachelorarbeit (kompakt) | 30-45 | 4-Kapitel |
-| Bachelorarbeit (Standard) | 40-60 | 5-Kapitel |
+| Bachelorarbeit (kompakt) | 40-50 | 4-Kapitel |
+| Bachelorarbeit (Standard) | 50-60 | 5-Kapitel |
 | Masterarbeit | 50-100 | 5- oder 6-Kapitel |
 | Dissertation | 150+ | 6+-Kapitel |
 | Eigene Datenerhebung | beliebig | Empirische Variante |

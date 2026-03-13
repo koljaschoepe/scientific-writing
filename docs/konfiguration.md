@@ -18,7 +18,7 @@ projekt:
 |-----|--------------------------|---------------|
 | seminararbeit | 10-20 Seiten | 3-Kapitel |
 | hausarbeit | 15-25 Seiten | 3- oder 4-Kapitel |
-| bachelor | 30-60 Seiten | 4- bis 5-Kapitel |
+| bachelor | 40-60 Seiten | 4- bis 5-Kapitel |
 | master | 50-100 Seiten | 5- bis 6-Kapitel |
 | dissertation | 150+ Seiten | 6+-Kapitel |
 
