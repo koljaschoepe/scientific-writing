@@ -1,6 +1,6 @@
 {
-  "aktuelle_phase": 0,
-  "abgeschlossene_phasen": [],
-  "gestartet_am": "",
-  "letztes_update": ""
+  "aktuelle_phase": 3,
+  "abgeschlossene_phasen": [1, 2],
+  "gestartet_am": "2026-03-14",
+  "letztes_update": "2026-03-14"
 }

@@ -1,69 +1,67 @@
 # === Scientific Writing Framework - Projektkonfiguration ===
 # Diese Datei wird von /setup automatisch generiert.
 # Du kannst sie auch manuell bearbeiten -- Änderungen werden beim nächsten /next berücksichtigt.
-#
-# Starte /setup um diese Datei interaktiv auszufüllen.
 
 projekt:
   titel: ""                             # Wird in Phase 1/2 festgelegt
-  sprache: "de"                         # de (Englisch-Support in Planung)
-  typ: ""                               # seminararbeit | hausarbeit | bachelor | master | dissertation
-  methodik: ""                          # literatur | empirisch-qualitativ | empirisch-quantitativ
+  sprache: "de"
+  typ: "seminararbeit"
+  methodik: "empirisch-quantitativ"
 
 quellen:
-  workflow: ""                          # bibtex | pdf-extraktion | manuell | keine
-  import_pfad: ""                       # Pfad zur .bib oder Zotero-Exportdatei
+  workflow: "pdf-extraktion"
+  import_pfad: ""
 
 latex:
-  auto_compile: true                    # Automatische Neukompilierung bei .tex-Änderungen
-  installation_geprüft: false          # Wird von /setup oder /compile gesetzt
+  auto_compile: true
+  installation_geprüft: true
 
 autor:
-  name: ""
+  name: "Kolja Schöpe"
   matrikelnummer: ""
-  hochschule: ""
+  hochschule: "TU Dresden"
   fakultaet: ""
-  studiengang: ""
+  studiengang: "Informatik"
 
 betreuung:
   erstgutachter: ""
   zweitgutachter: ""
 
 abgabe:
-  datum: ""                             # Format: TT.MM.JJJJ
+  datum: "14.09.2026"
   ort: ""
 
 formatierung:
-  zitationsstil: ""                     # harvard-inline | apa7 | ieee | chicago
+  zitationsstil: "harvard-inline"
   seitenumfang:
-    min: 40
-    max: 60
+    min: 10
+    max: 15
   schriftart: "Times New Roman"
-  schriftgroesse: 12
+  schriftgroesse: 11
   zeilenabstand: 1.5
   seitenränder:
-    oben: 2.5                           # in cm
+    oben: 2.5
     unten: 2.5
     links: 2.5
     rechts: 2.5
 
 verzeichnisse:
   inhaltsverzeichnis: true
-  abbildungsverzeichnis: true
-  tabellenverzeichnis: true
-  abkuerzungsverzeichnis: true
+  abbildungsverzeichnis: false
+  tabellenverzeichnis: false
+  abkuerzungsverzeichnis: false
   literaturverzeichnis: true
-  abstract: false                        # Abstract/Zusammenfassung vor der Einleitung
-  hilfsmittelverzeichnis: false         # Nur bei bestimmten Hochschulen (z.B. HTWD)
+  abstract: false
+  hilfsmittelverzeichnis: false
   selbststaendigkeitserklaerung: true
   sperrvermerk: false
 
 logo:
-  pfad: ""                              # z.B. "assets/img/logo.jpg" -- wird automatisch erkannt
+  pfad: ""
   erkannt: false
 
 fortschritt:
-  aktuelle_phase: 0                     # 0 = Noch nicht eingerichtet
+  aktuelle_phase: 1
   abgeschlossene_phasen: []
-  gestartet_am: ""
-  letztes_update: ""
+  gestartet_am: "14.03.2026"
+  letztes_update: "14.03.2026"

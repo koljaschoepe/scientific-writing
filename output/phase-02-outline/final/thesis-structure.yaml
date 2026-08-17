@@ -1,0 +1,32 @@
+kapitel:
+  - nummer: "1"
+    titel: "Einleitung"
+    unterkapitel:
+      - nummer: "1.1"
+        titel: "Problemstellung"
+        seiten_min: 0.5
+        seiten_max: 0.75
+      - nummer: "1.2"
+        titel: "Zielsetzung und Aufbau"
+        seiten_min: 0.5
+        seiten_max: 0.75
+  - nummer: "2"
+    titel: "Hauptteil"
+    unterkapitel:
+      - nummer: "2.1"
+        titel: "Grundlagen: Large Language Models und Kontextfenster"
+        seiten_min: 2
+        seiten_max: 3
+      - nummer: "2.2"
+        titel: "Strukturierungsstrategien im Überblick"
+        seiten_min: 3
+        seiten_max: 4
+      - nummer: "2.3"
+        titel: "Systematischer Vergleich anhand definierter Metriken"
+        seiten_min: 3
+        seiten_max: 5
+  - nummer: "3"
+    titel: "Fazit"
+    unterkapitel: []
+    seiten_min: 1
+    seiten_max: 1.5
