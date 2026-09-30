@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "termine": [],
+  "tagesziel": {
+    "arbeitstage": [
+      "mo",
+      "di",
+      "mi",
+      "do",
+      "fr"
+    ],
+    "woerter_manuell": null
+  }
+}

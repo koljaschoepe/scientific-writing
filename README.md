@@ -1,127 +1,120 @@
-# Scientific Writing Framework
+# Scientific Writing Kit
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Claude Code](https://img.shields.io/badge/Built%20with-Claude%20Code-blueviolet)](https://claude.com/claude-code)
+![Windows | macOS](https://img.shields.io/badge/Windows%20%7C%20macOS-nativ-555)
 
-Deine wissenschaftliche Arbeit, von der ersten Idee bis zum fertigen PDF. Komplett im Terminal mit [Claude Code](https://claude.com/claude-code).
+Deine wissenschaftliche Arbeit mit Claude, von der Themenfindung bis zum fertigen PDF.
+Für Menschen ohne Technik-Erfahrung: Du klickst Antworten an, Claude recherchiert, fragt
+nach, widerspricht, schreibt und prüft. Ein Dashboard zeigt dir jederzeit, wo du stehst.
 
-Du triffst die Entscheidungen und lieferst die Quellen. Claude übernimmt Strukturierung, Kapitelplanung, wissenschaftliches Schreiben, Qualitätsprüfung und LaTeX-Export. Ein durchgehender Workflow für Seminararbeiten, Hausarbeiten, Bachelorarbeiten, Masterarbeiten und Dissertationen.
+> **English:** A Claude Code template for writing a thesis end to end: topic, literature
+> research, proposal, outline, writing, review, LaTeX PDF. Non-technical users, Windows and
+> macOS, VS Code. The interface is German, the thesis itself can be written in German or
+> English. Start with the install script below, then type `/start`.
 
-> **English:** AI-powered academic writing framework for [Claude Code](https://claude.com/claude-code). Supports seminar papers through dissertations. Currently German-language only.
+![Dashboard](docs/bilder/dashboard.png)
 
-## Schnellstart
+## In drei Schritten starten
 
-### 1. Repository klonen
+**1. Claude-Abo und GitHub-Konto anlegen** ([claude.ai](https://claude.ai), Claude Code ist ab
+Pro dabei; [github.com/signup](https://github.com/signup), kostenlos).
 
+**2. Einrichtungs-Skript starten.** Installiert VS Code, Git, LaTeX, Pandoc, Python (uv) und
+Claude Code, legt dein privates Projekt auf GitHub an und öffnet es.
+
+Windows (PowerShell):
+```powershell
+irm https://raw.githubusercontent.com/koljaschoepe/scientific-writing/main/install/install-windows.ps1 | iex
+```
+macOS (Terminal):
 ```bash
-# Dieses Repository als Template verwenden (GitHub: "Use this template")
-# oder direkt klonen:
-git clone https://github.com/koljaschoepe/scientific-writing.git meine-arbeit
-cd meine-arbeit
+curl -fsSL https://raw.githubusercontent.com/koljaschoepe/scientific-writing/main/install/install-mac.sh | bash
 ```
 
-### 2. Claude Code starten
+**3. In VS Code rechts das Claude-Symbol öffnen und `/start` tippen.**
 
-```bash
-claude
+Schritt für Schritt mit allen Dialogen: [Windows](docs/installation-windows.md) ·
+[macOS](docs/installation-mac.md) · [Die ersten 30 Minuten](docs/erste-schritte.md)
+
+Schon eingerichtet und nur das Template nutzen? Oben „Use this template“, privates Repo
+anlegen, in VS Code öffnen, `/start`.
+
+## Der Weg
+
+```mermaid
+flowchart LR
+  A[Einrichtung<br>/start] --> B[Thema]
+  B --> C[Recherche]
+  C --> D[Exposé]
+  D --> E[Gliederung]
+  E --> F[Schreiben]
+  F --> G[Prüfen]
+  G --> H[Abgabe<br>PDF]
+  C -. Quellen laufend .-> F
 ```
 
-### 3. Projekt einrichten
+`/weiter` macht in jeder Phase den nächsten sinnvollen Schritt und fragt am Ende, ob du das
+Ergebnis freigibst. Das Exposé ist ein eigener Meilenstein, als PDF für deinen Betreuer.
 
-```
-/setup
-```
+## Was das Kit anders macht
 
-Das interaktive Interview führt dich in etwa 5 Minuten durch alle Einstellungen: Arbeitstyp, Seitenumfang, Methodik, Zitationsstil, Quellen-Workflow, Formatierung und mehr. Jede Frage bietet dir Auswahlmöglichkeiten, die du mit einem Klick bestätigen oder frei beantworten kannst.
-
-### 4. Los geht's
-
-```
-/next
-```
-
-Ab hier wiederholst du `/next` und `/approve`, bis die Arbeit fertig ist.
-
-## Workflow
-
-`/setup` · `/next` · `/approve` · `/next` · ... · `/compile` · PDF
-
-| Phase | Was passiert |
-|-------|-------------|
-| Setup | Interaktives Interview (ca. 5 Minuten) |
-| 1 · Brainstorming | Thema und Forschungsfragen entwickeln |
-| 2 · Gliederung | Kapitelstruktur erstellen |
-| 3 · Zitat-Zuordnung | Quellen den Kapiteln zuweisen* |
-| 4+5 · Planung + Schreiben | Kapitel einzeln planen und direkt schreiben |
-| 6 · Qualitätsprüfung | 3 Agenten prüfen parallel |
-| 7 · Finalisierung | LaTeX-Export und PDF |
-
-*Phase 3 wird automatisch übersprungen wenn du im Setup "keine Quellen" gewählt hast.
-
-## Features
-
-- **7-Phasen-Workflow** von Brainstorming bis PDF
-- **13 Slash Commands** für jeden Schritt
-- **Interaktives Setup** mit geführtem Interview und Multiple-Choice-Fragen
-- **Verschränktes Arbeiten** (Kapitel einzeln planen und direkt schreiben)
-- **Flexible Quellenarbeit** (BibTeX, Zotero, PDF-Extraktion, manuell oder ohne Quellen)
-- **4 Zitationsstile** (Harvard Inline, APA 7, IEEE, Chicago)
-- **Konfigurierbar** für jede Hochschule (Ränder, Schriftart, Deckblatt, Logo)
-- **3 parallele Reviewer** für Sprache, Zitationen und Argumentation
-- **LaTeX-Export** mit automatischer PDF-Erstellung
-- **Draft-Kompilierung** für PDF-Vorschau auch mit unvollständigen Kapiteln
-- **Self-Healing** erkennt und repariert inkonsistente Projektzustände
+- **Interview statt Formular.** Jede Rückfrage kommt als Auswahl mit Knöpfen und freiem Feld.
+  Claude fragt so lange nach, bis klar ist, was du willst, und passt sich deiner Arbeitsweise an.
+- **Challenge.** Freundlich im Ton, hart in der Sache: Schwachstellen zuerst, Gegenargument zu
+  jeder Entscheidung, Notenschätzung pro Kapitel.
+- **Recherche mit Triage.** Claude sucht in Fachdatenbanken, über deinen Uni-Zugang und im
+  Web, prüft jede Quelle über ihre DOI und legt Vorschläge mit Begründung ins Dashboard. Du
+  entscheidest.
+- **Zitattreue.** Zu jedem Zitat liegen Originalwortlaut und Seite. Die Prüfung vergleicht
+  mit dem Original, nicht mit einer Übersetzung.
+- **Naturwissenschaft ernst genommen.** Fachprofile für Naturwissenschaft, Technik,
+  Wirtschaft und Geisteswissenschaft. Experimenteller Teil, Formeln, Einheiten (siunitx),
+  chemische Formeln (mhchem, chemfig), Abbildungen aus eigenen Daten, Code-Teil mit Python.
+- **Echtes LaTeX.** KOMA-Script-Vorlage, BibLaTeX mit ACS, RSC, Angewandte, IEEE, APA oder
+  Harvard. Du schreibst nie LaTeX, du siehst nur das PDF.
+- **Dashboard.** Fahrplan, Fristen, Tagesziel, Kapitelstand, Quellen-Board, Auftragsfeld,
+  das Claude mit einem Klick startet.
+- **Transparenz.** KI-Nutzung wird automatisch protokolliert und landet im
+  Hilfsmittelverzeichnis.
+- **Backup mit /sync.** Privates GitHub-Repo, ein Befehl, Konflikte werden im Gespräch gelöst.
 
 ## Befehle
 
-| Befehl | Beschreibung |
-|--------|-------------|
-| `/setup` | Projekt einrichten (interaktives Interview) |
-| `/next` | Nächste Phase starten |
-| `/status` | Fortschritt anzeigen (mit Self-Healing) |
-| `/write [X.X]` | Kapitel schreiben |
-| `/review [X.X]` | Qualitätsprüfung (3 Agenten parallel) |
-| `/cite` | Quelle hinzufügen (PDF, manuell, BibTeX, Zotero) |
-| `/compile` | LaTeX zu PDF (mit Auto-Install) |
-| `/compile draft` | Entwurfs-PDF mit Platzhaltern |
-| `/approve [X.X]` | Phase oder Kapitel freigeben |
-| `/wordcount` | Wortanzahl und Seitenschätzung |
-| `/rewrite [X.X]` | Kapitel komplett neu schreiben |
-| `/reset [phase]` | Auf frühere Phase zurücksetzen |
-| `/validate` | Projektkonfiguration prüfen |
-| `/help` | Kontextsensitive Hilfe |
+| Befehl | Wofür |
+| --- | --- |
+| `/start` | Projekt per Interview einrichten |
+| `/weiter` | nächster sinnvoller Schritt, mit Freigabe am Ende |
+| `/recherche [thema]` | Literatur suchen, Vorschläge ins Dashboard |
+| `/quellen` | genommene Quellen und Uploads auswerten |
+| `/schreiben [nr]` | Unterkapitel planen und schreiben oder überarbeiten |
+| `/pruefen [nr\|alles]` | Sprache, Zitattreue, Argumentation, Fachliches, Umfang |
+| `/pdf [entwurf]` | PDF bauen |
+| `/sync` | sichern und mit GitHub abgleichen |
+| `/update` | neue Kit-Version holen, Arbeit bleibt unberührt |
+| `/hilfe [frage]` | Lage, Systemcheck, Reparatur |
+| `/dashboard [anpassen …]` | Dashboard öffnen oder umbauen |
 
-## Quellen importieren
+Details: [docs/befehle.md](docs/befehle.md)
 
-```
-/cite
-```
+## Aufbau
 
-Vier Wege:
-1. **BibTeX-Import** (.bib-Datei direkt importieren)
-2. **Zotero-Import** (CSV, RIS oder BibTeX aus Zotero)
-3. **PDF-Analyse** (Claude extrahiert Metadaten und Zitate)
-4. **Manuell** (schrittweise Eingabe)
+| Ordner | Gehört | Inhalt |
+| --- | --- | --- |
+| `arbeit/` | dir | Einstellungen, Zustand, Plan, Thema, Exposé, Gliederung, Kapitel, Prüfberichte |
+| `quellen/` | dir | Literatur (`literatur.bib`), Vorschläge, Zitate, PDFs, Eingang für Uploads |
+| `code/`, `daten/`, `abbildungen/` | dir | Auswertungen, Messdaten, Grafiken |
+| `kit/`, `.claude/`, `latex/vorlage/`, `docs/` | Kit | Werkzeuge, Befehle, Leitfäden, Vorlagen. Kommen per `/update` |
 
-## Voraussetzungen
+## Herkunft
 
-- [Claude Code CLI](https://claude.com/claude-code) installiert
-- **LaTeX** für PDF-Export (wird bei `/setup` oder `/compile` automatisch geprüft, Installation wird angeboten)
-  - macOS: `brew install --cask mactex-no-gui`
-  - Linux: `sudo apt install texlive-xetex texlive-fonts-extra texlive-lang-german latexmk`
+Das Kit ist aus der Bachelorarbeit „Spec-Driven-Writing: Ein Framework für die systematische
+KI-gestützte Erstellung von Marketing-Inhalten“ (HTW Dresden, 2026) entstanden. Version 2
+übernimmt die Lehren daraus: Die Qualität kam nicht aus der ersten Pipeline, sondern aus den
+Prüfrunden danach (Zitattreue gegen das Original, harte Sprachschwellen, Kürzungsplan,
+Hilfsmittelverzeichnis). Genau diese Runden sind jetzt fester Teil von `/pruefen`.
 
-## Dokumentation
+## Mitmachen und Lizenz
 
-- [Einstieg](docs/einstieg.md) (Schritt-für-Schritt-Anleitung)
-- [Konfiguration](docs/konfiguration.md) (alle config.yaml-Optionen)
-- [Literaturdatenbank](docs/literaturdatenbank.md) (Format, BibTeX, Zotero)
-- [Eigene Hochschule](docs/eigene-hochschule.md) (Framework anpassen)
-- [FAQ](docs/faq.md) (häufige Fragen)
-
-## Contributing
-
-Beiträge sind willkommen! Siehe [CONTRIBUTING.md](CONTRIBUTING.md).
-
-## Lizenz
-
-[MIT](LICENSE)
+Fehler und Ideen als [Issue](https://github.com/koljaschoepe/scientific-writing/issues),
+Beiträge siehe [CONTRIBUTING.md](CONTRIBUTING.md). Lizenz: [MIT](LICENSE).

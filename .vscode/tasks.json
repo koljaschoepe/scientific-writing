@@ -1,0 +1,38 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Dashboard",
+      "detail": "Startet das Dashboard auf http://127.0.0.1:4711/ (läuft im Hintergrund)",
+      "type": "process",
+      "command": "node",
+      "args": ["${workspaceFolder}/kit/dashboard/server.mjs"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "isBackground": true,
+      "runOptions": { "runOn": "folderOpen" },
+      "presentation": { "reveal": "never", "panel": "dedicated", "showReuseMessage": false, "close": false },
+      "problemMatcher": {
+        "owner": "dashboard",
+        "pattern": { "regexp": "^__nie__$" },
+        "background": { "activeBegins": ".", "beginsPattern": "Dashboard", "endsPattern": "(läuft|bereit|http://127\\.0\\.0\\.1)" }
+      }
+    },
+    {
+      "label": "PDF bauen",
+      "type": "process",
+      "command": "node",
+      "args": ["${workspaceFolder}/kit/werkzeuge/pdf.mjs"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "group": { "kind": "build", "isDefault": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "Systemcheck",
+      "type": "process",
+      "command": "node",
+      "args": ["${workspaceFolder}/kit/werkzeuge/check.mjs"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    }
+  ]
+}

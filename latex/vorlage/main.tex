@@ -1,0 +1,51 @@
+% =============================================================================
+% Hauptdatei des Scientific Writing Kit
+% =============================================================================
+% Nicht direkt kompilieren. Aufruf immer über /pdf bzw.
+%   node kit/werkzeuge/pdf.mjs            (fertiges PDF)
+%   node kit/werkzeuge/pdf.mjs entwurf    (mit Platzhaltern und Wasserzeichen)
+% pdf.mjs kopiert diese Vorlage nach latex/build/, erzeugt dort kit-daten.tex,
+% kapitel-liste.tex und die generierten Verzeichnisse und kompiliert.
+% Klasse: KOMA scrreprt (Standard) oder tudscrreprt (latex.vorlage = "tudscr").
+% =============================================================================
+
+\input{kit-daten}
+\expandafter\documentclass\expandafter[\kitKlassenoptionen]{\kitKlasse}
+\input{praeambel}
+
+\begin{document}
+
+% --- Titelei (römische Seitenzahlen) ---------------------------------------
+\pagenumbering{Roman}
+\ifkitTudscr
+  \input{deckblatt-tudscr}
+\else
+  \input{deckblatt}
+\fi
+\ifkitSperrvermerk \input{sperrvermerk} \fi
+\ifkitDanksagung \input{danksagung} \fi
+\ifkitZusammenfassung \input{zusammenfassung} \fi
+
+\tableofcontents
+\ifkitAbbildungen \listoffigures \fi
+\ifkitTabellen \listoftables \fi
+\ifkitAbkuerzungen \input{abkuerzungen} \fi
+\ifkitFormelzeichen \input{formelzeichen} \fi
+
+% --- Textteil (arabische Seitenzahlen) -------------------------------------
+\cleardoublepage
+\pagenumbering{arabic}
+\input{kapitel-liste}
+
+% --- Literatur und Anhang --------------------------------------------------
+\ifkitLiteratur
+  \printbibliography[heading=bibintoc]
+\fi
+\ifkitAnhang
+  \appendix
+  \input{anhang-liste}
+\fi
+\ifkitHilfsmittel \input{hilfsmittel} \fi
+\ifkitErklaerung \input{erklaerung} \fi
+
+\end{document}

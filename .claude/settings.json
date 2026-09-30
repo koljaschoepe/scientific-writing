@@ -1,14 +1,67 @@
 {
+  "//": "Rechte für Nicht-Techniker: praktisch nie eine Nachfrage, nur ein kleines Netz gegen Unumkehrbares. Eigene Ausnahmen gehören in .claude/settings.local.json.",
+  "permissions": {
+    "defaultMode": "acceptEdits",
+    "allow": [
+      "Bash",
+      "PowerShell",
+      "Read",
+      "Edit",
+      "Write",
+      "WebFetch",
+      "WebSearch",
+      "mcp__playwright"
+    ],
+    "//deny": "Alles hier zerstört Arbeit, die ohne Technikwissen nicht zurückzuholen ist.",
+    "deny": [
+      "Bash(git push --force *)",
+      "Bash(git push -f *)",
+      "Bash(git push * --force *)",
+      "Bash(git push * -f *)",
+      "Bash(git reset --hard *)",
+      "Bash(git clean *)",
+      "Bash(git filter-branch *)",
+      "Bash(rm -rf / *)",
+      "Bash(rm -rf ~ *)",
+      "Bash(rm -rf ~/ *)",
+      "Bash(gh repo delete *)",
+      "PowerShell(git push --force *)",
+      "PowerShell(git push -f *)",
+      "PowerShell(git reset --hard *)",
+      "PowerShell(git clean *)",
+      "PowerShell(Remove-Item * C:\\ *)",
+      "PowerShell(Format-Volume *)",
+      "PowerShell(gh repo delete *)",
+      "mcp__playwright__browser_run_code_unsafe"
+    ]
+  },
+  "//hooks": "Node statt bash/python: läuft identisch auf Windows und macOS. Exec-Form, damit Leerzeichen im Pfad nichts kaputt machen.",
   "hooks": {
     "SessionStart": [
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/start.mjs"],
+            "timeout": 15
+          }
+        ]
+      }
+    ],
+    "Stop": [
       {
         "hooks": [
           {
             "type": "command",
-            "command": "python3 -c \"\nimport json, os, sys\ntry:\n    if not os.path.exists('output/progress.json'):\n        print(json.dumps({'message': 'Willkommen beim Scientific Writing Framework! Starte mit /setup um dein Projekt einzurichten.'}))\n        sys.exit(0)\n    with open('output/progress.json') as f:\n        data = json.load(f)\n    phase = data.get('aktuelle_phase', 0)\n    if phase == 0:\n        msg = 'Willkommen zurück! Dein Projekt ist eingerichtet. Nutze /next um fortzufahren oder /status für den aktuellen Stand.'\n    else:\n        msg = f'Projekt geladen. Aktuelle Phase: {phase}/7. Nutze /next oder /status.'\n    print(json.dumps({'message': msg}))\nexcept Exception:\n    print(json.dumps({'message': 'Scientific Writing Framework geladen. Nutze /status für den aktuellen Stand.'}))\n\" 2>/dev/null || echo '{\"message\": \"Scientific Writing Framework geladen.\"}'"
+            "command": "node",
+            "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/stop.mjs"],
+            "timeout": 15
           }
         ]
       }
     ]
-  }
+  },
+  "enabledMcpjsonServers": ["playwright"]
 }

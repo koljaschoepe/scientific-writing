@@ -1,0 +1,10 @@
+% Abkürzungsverzeichnis. Einträge generiert pdf.mjs aus arbeit/begriffe.md
+% (alle Tabellenzeilen mit gefüllter Spalte "Abkürzung").
+\chapter*{\kitWortAbkuerzungen}
+\addcontentsline{toc}{chapter}{\kitWortAbkuerzungen}
+\thispagestyle{plain}
+\begin{longtable}{@{}p{3cm}p{\dimexpr\linewidth-3cm-2\tabcolsep\relax}@{}}
+  \input{abkuerzungen-inhalt}
+\end{longtable}
+% longtable ohne Beschriftung zählt sonst den Tabellenzähler mit hoch.
+\addtocounter{table}{-1}

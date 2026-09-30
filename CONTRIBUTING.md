@@ -1,94 +1,49 @@
-# Contributing
+# Mitmachen
 
-Danke für dein Interesse am Scientific Writing Framework!
+Danke für dein Interesse am Scientific Writing Kit.
 
-## Architektur-Überblick
+## Grundsätze
 
-```
-.claude/
-  agents/          10 spezialisierte Agenten (Brainstorming, Writer, Reviewer, ...)
-  skills/          13 Slash Commands (/setup, /next, /cite, /compile, /reset, /validate, ...)
-  rules/           3 Rule-Sets (writing-style, citation-format, latex-conventions)
-  settings.json    Session-Hooks (Willkommensnachricht, Phase-Erkennung)
+Verbindlich ist [kit/SPEC.md](kit/SPEC.md). Die wichtigsten Punkte:
 
-base/
-  guides/          Leitfäden (akademisches Schreiben, Kapitelstruktur, Zitationsstile)
-  templates/       Vorlagen (Kapitelplan, Kapitel, Bibliografie-Eintrag)
+- **Windows und macOS gleichwertig.** Werkzeuge und Hooks sind Node-Skripte (`.mjs`, nur
+  Built-ins, Node 20 oder neuer). Kein bash, python3 oder jq in Hooks. Pfade über `path.join`.
+  Hooks in Exec-Form (`"command": "node", "args": [...]`).
+- **Interview-Tool.** Jede Rückfrage in einem Skill über AskUserQuestion. Interviews laufen
+  im Hauptgespräch, nicht in Subagents.
+- **Dateien sind die Wahrheit.** Das Dashboard rendert aus den Dateien, es speichert nichts
+  selbst. Zustand ändert sich nur über `kit/werkzeuge/zustand.mjs`.
+- **Eigentumszonen.** Das Kit darf nur Herstellerdateien ändern, siehe `HERSTELLERZONE` in
+  `kit/werkzeuge/update.mjs`. Nutzerdateien (`arbeit/`, `quellen/`, `code/`, `daten/`,
+  `abbildungen/`) fasst ein Update nie an.
+- **Für Nicht-Techniker.** Meldungen ohne Jargon, jeder Fehler mit dem nächsten Schritt.
 
-config.yaml        Zentrale Projektkonfiguration
-preferences.md     Benutzerdefinierte Schreibpräferenzen
-docs/              Ausführliche Dokumentation
-```
-
-### Wie Agents und Skills zusammenspielen
-
-1. **Skills** (`.claude/skills/*/SKILL.md`) sind die Einstiegspunkte für User-Befehle
-2. Skills starten **Agents** (`.claude/agents/*.md`) für die eigentliche Arbeit
-3. Agents laden **Rules** (`.claude/rules/*.md`) und **Guides** (`base/guides/`) als Kontext
-4. Alle Agents lesen `config.yaml` für projektspezifische Einstellungen
-5. Ergebnisse werden in `output/phase-XX/draft/` gespeichert
-
-### Datenfluesse
+## Aufbau
 
 ```
-config.yaml ──> Alle Agents/Skills
-preferences.md ──> Writer, Reviewer-Language
-sources/literature.md ──> Writer, Citation-Mapper, Reviewer-Citations
-output/progress.json ──> /next, /status, /approve
+.claude/skills/<name>/SKILL.md   die elf Befehle
+.claude/agents/*.md              Subagents (Frontmatter: name, description, tools, model)
+.claude/rules/*.md               Regeln mit paths:-Frontmatter
+.claude/hooks/*.mjs              SessionStart und Stop
+kit/ablauf/<phase>.md            Vorgehen je Phase, geladen von /weiter
+kit/leitfaeden/                  Schreib-, Struktur-, Zitier- und Fachleitfäden
+kit/vorlagen/                    Vorlagen für Nutzerdateien
+kit/dashboard/                   Server und Oberfläche
+kit/werkzeuge/                   stand, zustand, sync, update, pdf, check, bib, playwright-mcp
+latex/vorlage/                   LaTeX-Vorlage
+install/                         Einrichtungs-Skripte
+docs/                            Anleitungen für Menschen
 ```
 
-## Neuen Skill hinzufügen
+## Eine neue Version veröffentlichen
 
-1. Erstelle `.claude/skills/DEIN-SKILL/SKILL.md`
-2. Nutze das Frontmatter-Format:
-   ```yaml
-   ---
-   name: dein-skill
-   description: Kurzbeschreibung wann der Skill genutzt wird
-   ---
-   ```
-3. Dokumentiere den Ablauf mit nummerierten Schritten
-4. Registriere den Skill in `CLAUDE.md` (Befehle-Tabelle)
-5. Füge einen Eintrag in `/help` hinzu
+1. `kit/VERSION` erhöhen (SemVer).
+2. Abschnitt oben in `kit/CHANGELOG.md`: `## x.y.z (YYYY-MM-DD)`, in einfacher Sprache.
+3. Werkzeuge testen: `node kit/werkzeuge/check.mjs`, Dashboard starten, `/pdf` mit Beispiel.
+4. Auf `main` pushen. Nutzer holen es mit `/update`.
 
-## Neuen Agent hinzufügen
+## Fehler melden
 
-1. Erstelle `.claude/agents/DEIN-AGENT.md`
-2. Struktur:
-   - **Rolle:** Was macht der Agent?
-   - **Kontext laden:** Welche Dateien werden gelesen?
-   - **Vorbedingungen:** Wann soll der Agent stoppen?
-   - **Aufgabe:** Schritt-für-Schritt-Anleitung
-   - **Output:** Wo und in welchem Format wird gespeichert?
-   - **Qualitäts-Checkliste:** Selbstprüfung
-3. Wichtig: Immer `config.yaml` als erstes laden
-4. Bei Quellen-Abhängigkeit: `quellen.workflow` prüfen
-
-## Neuen Zitationsstil hinzufügen
-
-1. Kopiere `base/guides/citation-systems/_vorlage.md`
-2. Benenne die Kopie (z.B. `mla.md`)
-3. Fülle alle Sektionen aus (Inline-Format, Literaturverzeichnis-Format, Beispiele)
-4. Trage den Stil in `docs/konfiguration.md` ein
-
-## Richtlinien
-
-### Sprache
-- Inhalte: Deutsch
-- Ordner- und Dateinamen: Englisch
-- Slash Commands: Englisch
-- Code-Kommentare: Deutsch oder Englisch
-
-### Dateien
-- Guides: `base/guides/` -- Maximal 80 Zeilen pro Datei
-- Agents: `.claude/agents/` -- Folgen dem Agent-Schema
-- Skills: `.claude/skills/*/SKILL.md` -- YAML-Frontmatter + Anweisungen
-- Rules: `.claude/rules/` -- Path-scoped mit globs-Frontmatter
-- Keine hartkodierten Werte -- immer aus config.yaml lesen
-
-## Pull Requests
-
-1. Fork erstellen
-2. Feature-Branch anlegen (`git checkout -b feature/mein-feature`)
-3. Änderungen mit Tests/Beispielen beschreiben
-4. PR mit ausgefülltem Template erstellen
+Issue mit: Betriebssystem, Ausgabe von `node kit/werkzeuge/check.mjs`, Kit-Version, was du
+erwartet hast und was passiert ist. Bitte keine Inhalte aus deiner Arbeit und keine
+Zugangsdaten.

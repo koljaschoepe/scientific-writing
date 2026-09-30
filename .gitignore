@@ -1,57 +1,42 @@
-# === Betriebssystem ===
+# Scientific Writing Kit
+# Herstellerzone: /update ergänzt hier fehlende Zeilen, eigene Einträge bleiben erhalten.
+
+# Generiert, wird bei jedem Lauf neu erzeugt
+dashboard.html
+latex/build/
+latex/kapitel/
+
+# Betriebssystem
 .DS_Store
 Thumbs.db
-._*
-.Spotlight-V100
-.Trashes
-
-# === IDE / Editor ===
-.vscode/
-.idea/
-*.swp
-*.swo
+desktop.ini
 *~
 
-# === Claude Code (lokal) ===
-.claude/settings.local.json
-
-# === Python ===
+# Code-Teil (uv legt die Umgebung selbst neu an)
+code/.venv/
+.venv/
 __pycache__/
 *.pyc
+.ipynb_checkpoints/
+node_modules/
 
-# === Backups ===
-*.bak.md
+# Protokolle der Installation
+install/*.log
+
+# Persönliche Claude-Einstellungen dieses Rechners
+.claude/settings.local.json
+
+# Temporäre Dateien
+*.tmp
 *.bak
+.~lock.*
 
-# === PDFs (Copyright) ===
-sources/pdfs/*.pdf
-!sources/pdfs/.gitkeep
-
-# === LaTeX Build-Artefakte ===
+# Bewusst NICHT ignoriert: quellen/pdfs/
+# Das Arbeits-Repo ist privat, die PDFs sind Teil deiner Arbeit und sollen mit /sync
+# gesichert werden. Einzelne Dateien über 95 MB meldet /sync (GitHub-Grenze 100 MB).
+# Wer das Kit öffentlich teilt, trägt hier "quellen/pdfs/*.pdf" ein (Urheberrecht).
+latex/build-expose/
+Arbeit-neu.pdf
 *.aux
-*.log
-*.fls
-*.fdb_latexmk
-*.out
-*.toc
-*.lof
-*.lot
-*.xdv
-*.synctex.gz
-*.bbl
-*.blg
 *.bcf
 *.run.xml
-
-# === LaTeX-Output (generiert) ===
-output/phase-07-latex/latex/thesis.pdf
-output/phase-07-latex/latex/*.aux
-output/phase-07-latex/latex/*.log
-output/phase-07-latex/latex/*.xdv
-output/phase-07-latex/latex/*.fls
-output/phase-07-latex/latex/*.fdb_latexmk
-output/phase-07-latex/latex/*.out
-output/phase-07-latex/latex/*.toc
-output/phase-07-latex/latex/*.lof
-output/phase-07-latex/latex/*.lot
-output/phase-07-latex/latex/*.synctex.gz

@@ -1,0 +1,49 @@
+{
+  "//": "Einstellungen für dieses Projekt. Herstellerzone: /update überschreibt diese Datei. Eigene Einstellungen gehören in die Benutzereinstellungen von VS Code.",
+
+  "claudeCode.initialPermissionMode": "acceptEdits",
+
+  "files.autoSave": "afterDelay",
+  "files.autoSaveDelay": 1500,
+  "files.eol": "\n",
+  "files.encoding": "utf8",
+
+  "[markdown]": {
+    "editor.wordWrap": "on",
+    "editor.quickSuggestions": { "other": false, "comments": false, "strings": false },
+    "editor.unicodeHighlight.ambiguousCharacters": false
+  },
+  "[latex]": { "editor.wordWrap": "on" },
+
+  "//latex": "PDF baut /pdf. LaTeX Workshop dient nur als Vorschau und baut nicht selbst.",
+  "latex-workshop.latex.autoBuild.run": "never",
+  "latex-workshop.view.pdf.viewer": "tab",
+  "latex-workshop.message.error.show": false,
+  "latex-workshop.message.warning.show": false,
+
+  "//browser": "localhost-Links (Dashboard) im integrierten Browser von VS Code öffnen (ab VS Code 1.109).",
+  "workbench.browser.openLocalhostLinks": true,
+
+  "git.autofetch": false,
+  "git.confirmSync": true,
+  "git.openRepositoryInParentFolders": "never",
+
+  "files.exclude": {
+    "**/.git": true,
+    "**/.DS_Store": true,
+    "**/Thumbs.db": true,
+    "**/node_modules": true,
+    "**/__pycache__": true,
+    "code/.venv": true,
+    "latex/build": true
+  },
+  "search.exclude": {
+    "latex/build": true,
+    "latex/kapitel": true,
+    "quellen/pdfs": true,
+    "dashboard.html": true
+  },
+
+  "workbench.startupEditor": "none",
+  "explorer.confirmDragAndDrop": false
+}

@@ -22,7 +22,7 @@ Hast du eine Idee wie es umgesetzt werden könnte?
 
 - [ ] Agent (welcher?)
 - [ ] Skill / Slash Command (welcher?)
-- [ ] Konfiguration (config.yaml)
+- [ ] Konfiguration (arbeit/projekt.json)
 - [ ] Guide / Vorlage
 - [ ] LaTeX / PDF-Export
 - [ ] Dokumentation

@@ -34,7 +34,7 @@ Was hättest du erwartet?
 Fehlermeldung hier einfügen
 ```
 
-## config.yaml (relevante Teile)
+## arbeit/projekt.json (relevante Teile)
 
 ```yaml
 projekt:

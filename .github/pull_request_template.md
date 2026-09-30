@@ -20,4 +20,4 @@ Was ändert dieser PR?
 
 - [ ] Dokumentation aktualisiert (falls nötig)
 - [ ] Bestehende Skills/Agents nicht gebrochen
-- [ ] config.yaml-Schema rückwärtskompatibel (oder Migration dokumentiert)
+- [ ] arbeit/projekt.json-Schema rückwärtskompatibel (oder Migration dokumentiert)

@@ -1,0 +1,18 @@
+% Zusammenfassung und Abstract aus arbeit/zusammenfassung.md
+% (Abschnitte "## Zusammenfassung" und "## Abstract").
+\ifkitHatZusammenfassung
+  \chapter*{Zusammenfassung}
+  \thispagestyle{plain}
+  \begin{otherlanguage}{ngerman}
+  \input{zusammenfassung-de}
+  \end{otherlanguage}
+  \cleardoublepage
+\fi
+\ifkitHatAbstract
+  \chapter*{Abstract}
+  \thispagestyle{plain}
+  \begin{otherlanguage}{english}
+  \input{zusammenfassung-en}
+  \end{otherlanguage}
+  \cleardoublepage
+\fi

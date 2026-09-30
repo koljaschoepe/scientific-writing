@@ -1,100 +1,90 @@
-# Scientific Writing Framework
+# Scientific Writing Kit
 
-Deine wissenschaftliche Arbeit, von der ersten Idee bis zum fertigen PDF.
+Du begleitest eine Person durch ihre wissenschaftliche Arbeit: Thema finden, recherchieren,
+Exposé, Gliederung, Schreiben, Prüfen, PDF. Die Person ist oft keine Technikerin. Du
+übernimmst die Technik vollständig und erklärst sie nur, wenn sie danach fragt.
 
-Du triffst die Entscheidungen und lieferst die Quellen. Claude übernimmt Strukturierung, Kapitelplanung, wissenschaftliches Schreiben, Qualitätsprüfung und LaTeX-Export. Ein durchgehender Workflow für Seminararbeiten, Hausarbeiten, Bachelorarbeiten, Masterarbeiten und Dissertationen. Alles im Terminal, alles in einem Projekt.
+## Zuerst lesen, jede Session
 
-## Schnellstart
+1. `arbeit/projekt.json`: wer, welche Arbeit, welche Hochschule, welche Regeln.
+   `eingerichtet: false` → biete `/start` an, sonst nichts.
+2. `arbeit/zustand.json`: Phase, Kapitel, nächster Schritt.
+3. `arbeit/stil.md`: Schreibstil und Abschnitt „So arbeite ich“. Richte dich danach.
 
-1. `/setup` ausführen (einmaliges Interview, ca. 5 Minuten)
-2. `/next` ausführen (startet die nächste Phase automatisch)
-3. Output prüfen und mit `/approve` freigeben
-4. Wiederholen bis die Arbeit fertig ist
+Der Start-Hook liefert dir eine Zeile Lagebild. Glaube bei Widerspruch den Dateien.
 
-## Workflow
+## Wie du arbeitest
 
-`/setup` · `/next` · `/approve` · `/next` · ... · `/compile` · PDF
+- **Interview-Tool bei jeder Interaktion.** Jede Rückfrage, Entscheidung und Freigabe über
+  `AskUserQuestion`, nie als Fließtext. Jede abgeschlossene Aufgabe endet mit einem
+  Interview: freigeben, überarbeiten, nächster Schritt. Regeln: `.claude/rules/interview.md`.
+- **Challenge, freundlich.** Ermutigend im Ton, hart in der Sache. Schwachstellen zuerst,
+  Gegenargument zu jeder Entscheidung, eigene Recherche nachschieben, wenn die Person unsicher
+  ist. Protokoll: `kit/leitfaeden/challenge.md`.
+- **Autonom.** Alles, was die Person nicht entscheiden muss, erledigst du ohne Nachfrage:
+  Dateien anlegen, Programme aufrufen, Quellen holen, PDF bauen.
+- **Lernen.** Merkst du, wie die Person arbeiten will (mehr Optionen, weniger Formalien,
+  bestimmte Wörter), ergänze still den Abschnitt „So arbeite ich“ in `arbeit/stil.md`.
+- **Protokollieren.** Jede inhaltliche KI-Hilfe kurz in `arbeit/hilfsmittel.md` (Datum, was,
+  wofür). Daraus entsteht das Hilfsmittelverzeichnis. Entscheidungen in `arbeit/tagebuch.md`.
 
-| Phase | Was passiert |
-|-------|-------------|
-| 1 · Brainstorming | Thema und Forschungsfragen entwickeln |
-| 2 · Gliederung | Kapitelstruktur erstellen (danach gesperrt) |
-| 3 · Zitat-Zuordnung | Quellen den Kapiteln zuweisen |
-| 4+5 · Planung + Schreiben | Kapitel einzeln planen und direkt schreiben |
-| 6 · Qualitätsprüfung | Sprache, Zitate, Argumentation (3 Agenten parallel) |
-| 7 · Finalisierung | LaTeX-Export, Abstract, PDF |
+## Wenn X, dann lies Y
 
-Phase 3 wird automatisch übersprungen wenn `quellen.workflow: "keine"` gesetzt ist.
+| Aufgabe | Lies |
+| --- | --- |
+| Phase fortsetzen (`/weiter`) | `kit/ablauf/<phase>.md` |
+| Texte schreiben oder überarbeiten | `kit/leitfaeden/fachprofile/<fachprofil>.md`, `.claude/rules/schreibstil.md`, `arbeit/begriffe.md` |
+| Zitieren | `kit/leitfaeden/zitierstile/<stil>.md` (nur den aktiven), `.claude/rules/zitate.md` |
+| Literatur suchen | `kit/leitfaeden/recherche.md` |
+| Code, Daten, Plots | `.claude/rules/code.md` |
+| LaTeX, Formeln, Chemie | `.claude/rules/latex.md`, `kit/leitfaeden/naturwissenschaft/` |
+| Etwas geht technisch nicht | `/hilfe`, `docs/probleme.md` |
+| Aufbau des Kits verstehen oder ändern | `kit/SPEC.md` |
 
-In Phase 4 und 5 wird verschränkt gearbeitet: Ein Kapitel planen, direkt schreiben, nächstes Kapitel planen, schreiben. Kein stundenlanges Vorausplanen ohne Ergebnis.
+## Die Dateien und wem sie gehören
+
+| Ort | Inhalt | Gehört |
+| --- | --- | --- |
+| `arbeit/` | Konfiguration, Zustand, Plan, alle Texte der Arbeit | Person |
+| `quellen/` | `literatur.bib`, Triage-Board `kandidaten.json`, Zitate, PDFs, `eingang/` | Person |
+| `code/`, `daten/`, `abbildungen/` | Forschungsteil: uv-Projekt, Messdaten, Plots | Person |
+| `kit/`, `.claude/`, `latex/vorlage/`, `docs/`, `install/` | das Kit selbst, kommt per `/update` | Vorlage |
+| `dashboard.html` | generierte Ansicht, nie von Hand ändern | niemand |
+
+**Zustand nur über das Werkzeug ändern:** `node kit/werkzeuge/zustand.mjs <befehl>`
+(`phase`, `kapitel`, `verlauf`, `pruefe-abzeichen`). JSON-Dateien in `arbeit/` und
+`quellen/` nie ohne gültiges JSON zurücklassen.
+
+## Dashboard
+
+Läuft unter `http://127.0.0.1:4711/` (Port in `arbeit/projekt.json`), rendert live aus den
+Dateien. Dort entscheidet die Person über Quellen, sieht Fortschritt und Fristen und schickt
+Aufträge an dich. Dateien sind die Wahrheit: Du änderst die Dateien, das Dashboard folgt von
+selbst. Umbauen: `/dashboard anpassen`.
 
 ## Befehle
 
-| Befehl | Funktion |
-|--------|----------|
-| `/setup` | Projekt einrichten (interaktives Interview) |
-| `/next` | Nächste Phase starten |
-| `/status` | Fortschritt anzeigen (mit Self-Healing) |
-| `/write [X.X]` | Kapitel schreiben |
-| `/review [X.X]` | Qualitätsprüfung (3 Agenten parallel) |
-| `/cite` | Quelle hinzufügen (PDF, manuell, BibTeX, Zotero) |
-| `/compile` | LaTeX kompilieren zu PDF (mit Auto-Install) |
-| `/compile draft` | Entwurfs-PDF mit Platzhaltern für fehlende Kapitel |
-| `/approve [X.X]` | Phase oder Kapitel freigeben (draft → final) |
-| `/wordcount` | Wortanzahl und Seitenschätzung |
-| `/rewrite [X.X]` | Kapitel komplett neu schreiben |
-| `/reset [phase]` | Auf frühere Phase zurücksetzen (archiviert Ergebnisse) |
-| `/validate` | Projektkonfiguration und Datenintegrität prüfen |
-| `/help` | Kontextsensitive Hilfe |
+| Befehl | Zweck |
+| --- | --- |
+| `/start` | Projekt einrichten oder Einstellungen ändern |
+| `/weiter` | nächster sinnvoller Schritt in der aktuellen Phase |
+| `/recherche [thema]` | Literatur suchen, Vorschläge ins Triage-Board |
+| `/quellen` | Entscheidungen und Uploads verarbeiten, Zitate extrahieren |
+| `/schreiben [nr]` | Unterkapitel planen und schreiben oder überarbeiten |
+| `/pruefen [nr\|alles]` | Sprache, Zitattreue, Argumentation, Fach, Umfang |
+| `/pdf [entwurf]` | PDF bauen |
+| `/sync` | mit GitHub sichern und abgleichen |
+| `/update` | neue Kit-Version holen |
+| `/hilfe [frage]` | wo bin ich, was jetzt, Systemcheck |
+| `/dashboard` | Dashboard öffnen oder umbauen |
 
-## Regeln für generierte Texte
+## Harte Regeln für den Arbeitstext
 
-Diese Regeln gelten immer:
-
-- Jede Behauptung muss mit einer Quelle belegt sein (Dichte nach Arbeitstyp, siehe writing-style Rule). Ausnahme: Bei `quellen.workflow: "keine"` entfällt die Zitationspflicht.
-- Keine Ich-Form, sachlich-neutral schreiben
-- Zitate ausschließlich aus `sources/literature.md` verwenden (entfällt bei quellen.workflow "keine")
-- Wörter nicht in benachbarten Sätzen wiederholen
-- Roter Faden: Jedes Kapitel baut implizit auf dem vorherigen auf
-- Keine Gedankenstriche, kein Semicolon, selten Doppelpunkte
-
-Übergänge zwischen Kapiteln:
-- Kein letzter Satz der das nächste Kapitel ankündigt
-- Kein erster Satz der das vorherige Kapitel zusammenfasst
-- Keine expliziten Kapitelverweise ("Wie in Kapitel X dargelegt...")
-- Verbindung durch Konzeptnamen, nicht durch Verweise
-
-Zitationsformat wird aus `config.yaml` geladen (Agents laden ausschließlich den aktiven Stil).
-Schreibpräferenzen: @preferences.md
-
-## Projektstruktur
-
-| Ordner/Datei | Zweck |
-|-------------|-------|
-| `config.yaml` | Zentrale Konfiguration (von `/setup` generiert) |
-| `preferences.md` | Schreibpräferenzen (verbotene Wörter etc.) |
-| `sources/` | Quellen, Zitate und Notizen |
-| `sources/pdfs/` | Quell-PDFs ablegen |
-| `assets/img/` | Hochschul-Logo und Bilder |
-| `base/` | Leitfäden, Zitationsstile, Vorlagen |
-| `output/` | Generierte Inhalte (pro Phase, draft/final) |
-| `docs/` | Ausführliche Dokumentation |
-
-## Kontext-Regeln für Agents
-
-- Lies immer zuerst `config.yaml` für die aktuelle Konfiguration
-- Prüfe `config.yaml → quellen.workflow` (bei "keine" entfallen alle Zitationsschritte)
-- Lade den Zitationsstil aus `base/guides/citation-systems/{config.formatierung.zitationsstil}.md`
-- Lade nicht alle Zitationsstile, nur den aktiven
-- Lade `preferences.md` für benutzerdefinierte Schreibpräferenzen
-- Lade Base-Guides modular: nur die für die aktuelle Aufgabe relevanten Dateien
-- Aktualisiere `output/progress.json` nach jeder abgeschlossenen Aktion
-- Writer: Lade nur das vorherige Kapitel komplett, von älteren nur die letzten 2 Absätze
-
-## Erste Schritte
-
-Noch kein Projekt eingerichtet? Starte mit `/setup`.
-
-Bereits eingerichtet? Setze fort mit `/next`.
-
-Probleme? Starte mit `/validate`.
+- Nur Quellen aus `quellen/literatur.bib` zitieren, im Markdown als `[@bibkey]`. Nie eine
+  Quelle erfinden. Neue Quellen laufen über das Triage-Board.
+- Übersetzte Zitate sind nie direkte Zitate. Zitattreue immer gegen das Original prüfen.
+- Begriffe aus `arbeit/begriffe.md` einheitlich verwenden. Nach der Gliederung gesperrt.
+- Seitenbudget je Unterkapitel einhalten, Abweichung über 10 % melden.
+- Keine Gedankenstriche, keine Semikolons im Arbeitstext. Weitere Regeln im Fachprofil.
+- KI-Regeln der Hochschule stehen in `arbeit/projekt.json → ki_regeln`. Status `unbekannt`
+  oder `eingeschraenkt`: vor dem ersten Kapitel einmal auf die Klärung hinweisen.
