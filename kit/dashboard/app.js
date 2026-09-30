@@ -76,6 +76,10 @@
   const parseTag = (s) => { const m = String(s || '').match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? new Date(+m[1], +m[2] - 1, +m[3]) : null; };
   const datumDe = (s) => { const d = parseTag(s); return d ? `${zwei(d.getDate())}.${zwei(d.getMonth() + 1)}.${d.getFullYear()}` : (s || ''); };
   const datumKurz = (s) => { const d = parseTag(s); return d ? `${zwei(d.getDate())}.${zwei(d.getMonth() + 1)}.` : ''; };
+  // Datenwerte bleiben ASCII, die Anzeige nicht.
+  const ANZEIGE = { geprueft: 'geprüft', Geprueft: 'Geprüft', pruefen: 'prüfen', Pruefen: 'Prüfen', Pruefung: 'Prüfung',
+    spaeter: 'später', Spaeter: 'Später', abschliessen: 'abschließen', Uebersicht: 'Übersicht', Expose: 'Exposé' };
+  const anzeige = (s) => String(s ?? '').replace(/\b(geprueft|Geprueft|pruefen|Pruefen|Pruefung|spaeter|Spaeter|abschliessen|Uebersicht|Expose)\b/g, (w) => ANZEIGE[w]);
   const WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
   const WT_ID = ['so', 'mo', 'di', 'mi', 'do', 'fr', 'sa'];
   function relTage(t) {
@@ -318,8 +322,15 @@
          <div class="balken"><i style="width:${Math.min(100, Math.round((tz.heute / tz.woerter) * 100))}%"></i></div>
          <div class="zahl-sub">${tz.erreicht ? '<span class="ok">Tagesziel erreicht</span>' : `noch ${zahl(Math.max(0, tz.woerter - tz.heute))} Wörter`}</div>`
       : `<div class="zahl">${zahl(tz.heute || 0)} <small>Wörter</small></div><div class="zahl-sub">Tagesziel entsteht mit Abgabedatum und Gliederung</div>`;
-    const tage = (S.letzte14 || []).map((t) => `<i class="${t.arbeitstag ? '' : 'frei '}${aktivKlasse(t)}" title="${h(datumDe(t.tag))}: ${t.woerter} Wörter, ${t.quellen} Quellen"></i>`).join('');
-    const serie = `<div class="zahl">${zahl(S.serie || 0)} <small>${S.serie === 1 ? 'Arbeitstag' : 'Arbeitstage'}</small></div><div class="tage14" aria-label="Letzte 14 Tage">${tage}</div>`;
+    const heuteIso = isoTag(new Date());
+    const tage = (S.letzte14 || []).map((t) => {
+      const d = parseTag(t.tag); const a = aktivKlasse(t);
+      const kl = ['tg', t.arbeitstag ? '' : 'frei', a, t.tag === heuteIso ? 'heute' : ''].filter(Boolean).join(' ');
+      const tip = `${d ? WT[d.getDay()] + ' ' : ''}${datumDe(t.tag)}: ${a ? `${zahl(t.woerter)} Wörter, ${zahl(t.quellen)} Quellen` : t.arbeitstag ? 'nicht gearbeitet' : 'frei'}`;
+      return `<span class="${kl}" title="${h(tip)}"><i></i><b>${d ? WT[d.getDay()].charAt(0) : ''}</b></span>`;
+    }).join('');
+    const serie = `<div class="zahl">${zahl(S.serie || 0)} <small>${S.serie === 1 ? 'Arbeitstag' : 'Arbeitstage'} am Stück</small></div>
+      <div class="tage14" role="img" aria-label="Letzte 14 Tage, blau heißt gearbeitet">${tage}</div>`;
     const gesamt = `<div class="zahl">${zahl(w.gesamt || 0)} <small>${w.ziel ? '/ ' + zahl(w.ziel) : ''} Wörter</small></div>
       ${w.ziel ? `<div class="balken"><i style="width:${w.prozent || 0}%"></i></div>` : ''}
       <div class="zahl-sub">etwa ${zahl(w.seiten_geschaetzt || 0)} Seiten${w.ziel ? ` · ${w.prozent || 0} %` : ''}</div>`;
@@ -375,16 +386,17 @@
     }
     const bald = (S.termine || []).filter((t) => !t.erledigt && t.tage != null && t.tage <= 14);
     const links = [];
+    const rechtsTeile = [];
     if (bald.length || S.abgabe?.tage != null) {
       links.push(`<section class="abschnitt"><h2>Demnächst <button type="button" class="knopf still klein rechts" data-a="reiter" data-v="plan">Plan</button></h2>
         <ul class="liste">${bald.map((t) => terminZeile(t, false)).join('') || '<li class="leer">In den nächsten zwei Wochen steht nichts an.</li>'}</ul></section>`);
     }
     const verlauf = (S.verlauf || []).slice(0, 8);
     if (verlauf.length) {
-      links.push(`<section class="abschnitt"><h2>Zuletzt</h2><div class="karte"><ul class="verlauf">${verlauf.map((v) => `<li><span class="wann">${h(wann(v.datum))}</span><span>${h(v.was)}</span></li>`).join('')}</ul></div></section>`);
+      rechtsTeile.push(`<section class="abschnitt"><h2>Zuletzt</h2><div class="karte"><ul class="verlauf">${verlauf.map((v) => `<li><span class="wann">${h(wann(v.datum))}</span><span>${h(anzeige(v.was))}</span></li>`).join('')}</ul></div></section>`);
     }
-    const rechts = `<section class="abschnitt"><h2>Abzeichen <button type="button" class="knopf still klein rechts" data-a="abz-alle">${ui.abzAlle ? 'weniger' : 'alle'}</button></h2>${abzeichenHtml(ui.abzAlle)}</section>`;
-    teile.push(links.length ? `<div class="zwei"><div>${links.join('')}</div><div>${rechts}</div></div>` : rechts);
+    links.push(`<section class="abschnitt"><h2>Abzeichen <button type="button" class="knopf still klein rechts" data-a="abz-alle">${ui.abzAlle ? 'weniger' : 'alle'}</button></h2><div class="karte">${abzeichenHtml(ui.abzAlle)}</div></section>`);
+    teile.push(rechtsTeile.length ? `<div class="zwei gleich"><div>${links.join('')}</div><div>${rechtsTeile.join('')}</div></div>` : links.join(''));
     return teile.join('');
   }
 
@@ -420,7 +432,7 @@
           <div class="unter">${h(meta)}${q.warum && !offen ? ` <span class="blass">· ${h(q.warum)}</span>` : ''}</div>
         </div>
         <div class="rechts">
-          ${q.stern ? `<span class="warm mono" title="Deine Sterne">${'★'.repeat(q.stern)}</span>` : ''}
+          ${q.stern ? `<span class="warm sterne-kurz" title="Deine Sterne">${'★'.repeat(q.stern)}</span>` : ''}
           ${relevanzHtml(q.relevanz)}
           ${q.status !== 'vorschlag' ? `<span class="status">${quelleStatusText(q)}</span>` : ''}
           ${entscheid}
@@ -448,7 +460,7 @@
       <div class="feld"><span class="lbl">Markierungen</span><span class="marken">${MARKIERUNGEN.map((m) => `<button type="button" class="marke${(q.markierungen || []).includes(m) ? ' an' : ''}" data-a="q-marke" data-id="${h(q.id)}" data-v="${m}" aria-pressed="${(q.markierungen || []).includes(m)}" ${LIVE ? '' : 'disabled'}>${m}</button>`).join('')}</span></div>
       <div class="feld"><span class="lbl">Notiz</span><textarea data-notiz="${h(q.id)}" placeholder="Was dir auffällt, wofür du sie nutzen willst ..." ${LIVE ? '' : 'readonly'}>${h(q.notiz || '')}</textarea></div>
       ${statusWahl}`}
-      <div class="feld"><span class="lbl">Schlüssel</span><span class="mono grau">${h(q.bibkey || '–')} · ${h(q.herkunft || '')}${q.hinzugefuegt ? ' · ' + datumDe(q.hinzugefuegt) : ''}</span></div>
+      <div class="feld"><span class="lbl">Schlüssel</span><span class="mono grau">${q.bibkey ? h(q.bibkey) : 'noch kein Schlüssel'} · ${h(q.herkunft || '')}${q.hinzugefuegt ? ' · ' + datumDe(q.hinzugefuegt) : ''}</span></div>
     </div>`;
   }
 
@@ -474,6 +486,8 @@
     }[ui.filter];
     const eingang = (Q.eingang || []);
     return `
+      ${eingang.length ? `<section class="abschnitt"><h2>Eingang <span class="rechts"><button type="button" class="knopf klein haupt" data-a="auftrag" data-cmd="/quellen" data-sofort="1">Claude verarbeiten lassen</button></span></h2>
+        <ul class="liste">${eingang.map((d) => `<li><div class="zeile">${waehlKnopf(bDatei('quellen/eingang/' + d.name))}<div class="haupt"><div class="titel">${h(d.name)}</div><div class="unter mono">${Math.max(1, Math.round(d.groesse / 1024))} KB · ${h(wann(d.geaendert))}</div></div></div></li>`).join('')}</ul></section>` : ''}
       <div class="filter" role="group" aria-label="Filter">${filter.map(([id, name]) => `<button type="button" data-a="filter" data-v="${id}" aria-pressed="${ui.filter === id}">${name}<span class="zahl-klein">${z[id] || 0}</span></button>`).join('')}</div>
       <div class="leiste">
         <input type="search" id="suche" placeholder="Suchen in Titel, Autoren, Notizen ..." value="${h(ui.suche)}" aria-label="Quellen durchsuchen">
@@ -482,10 +496,8 @@
         </select>
         <button type="button" class="knopf" data-a="auftrag" data-cmd="/recherche">${icon('lupe')} Neue Recherche</button>
       </div>
-      ${eingang.length ? `<section class="abschnitt"><h2>Eingang <span class="rechts"><button type="button" class="knopf klein haupt" data-a="auftrag" data-cmd="/quellen" data-sofort="1">Claude verarbeiten lassen</button></span></h2>
-        <ul class="liste">${eingang.map((d) => `<li><div class="zeile">${waehlKnopf(bDatei('quellen/eingang/' + d.name))}<div class="haupt"><div class="titel">${h(d.name)}</div><div class="unter mono">${Math.max(1, Math.round(d.groesse / 1024))} KB · ${h(wann(d.geaendert))}</div></div></div></li>`).join('')}</ul></section>` : ''}
       <section class="abschnitt">
-        <ul class="liste">${liste.map(quelleZeile).join('') || `<li class="leer">${h(leerText)}</li>`}</ul>
+        <ul class="liste">${liste.map(quelleZeile).join('') || `<li class="leer leer-zeile"><span>${h(leerText)}</span>${ui.filter === 'vorschlag' && !such ? `<button type="button" class="knopf haupt" data-a="auftrag" data-cmd="/recherche">${icon('lupe')} Recherche starten</button>` : ''}</li>`}</ul>
       </section>
       <section class="abschnitt nur-live">
         <div class="drop" id="drop" role="button" tabindex="0">PDFs oder andere Dateien hierher ziehen oder klicken. Sie landen im Eingang, Claude sortiert sie mit <span class="mono">/quellen</span> ein.</div>
@@ -501,14 +513,14 @@
       ${waehlKnopf(bKapitel(k))}
       <div class="haupt" ${k.vorhanden ? `data-a="link" data-href="${h(dateiLink(k.datei))}" role="link" tabindex="0" title="In VS Code öffnen"` : ''}>
         <div class="titel"><span class="mono grau">${h(k.nr)}</span> ${h(k.titel || 'ohne Titel')}</div>
-        <div class="unter">${STATUS_NAME[k.status] || k.status}${k.note_schaetzung ? ` · Note etwa ${h(k.note_schaetzung)}` : ''}${k.offene_punkte ? ` · <span class="warm">${k.offene_punkte} offene Punkte</span>` : ''}${k.ueber_budget ? ' · <span class="warm">über Budget</span>' : ''}</div>
+        <div class="unter">${STATUS_NAME[k.status] || anzeige(k.status)}${k.note_schaetzung ? ` · Note etwa ${h(k.note_schaetzung)}` : ''}${k.offene_punkte ? ` · <span class="warm">${k.offene_punkte} offene Punkte</span>` : ''}${k.ueber_budget ? ' · <span class="warm">über Budget</span>' : ''}</div>
       </div>
       <div class="kap-balken"><span class="mono">${zahl(k.woerter)}${k.woerter_ziel ? ' / ' + zahl(k.woerter_ziel) : ''}</span>
         ${k.woerter_ziel ? `<div class="balken${k.ueber_budget ? ' warm' : ''}"><i style="width:${pz}%"></i></div>` : ''}</div>
       <div class="rechts kap-rechts">
         <button type="button" class="icon" data-a="auftrag" data-cmd="/schreiben" data-text="${h(k.nr)}" title="Schreiben oder überarbeiten" aria-label="Kapitel ${h(k.nr)} schreiben">${icon('stift')}</button>
         <button type="button" class="icon" data-a="auftrag" data-cmd="/pruefen" data-text="${h(k.nr)}" title="Prüfen lassen" aria-label="Kapitel ${h(k.nr)} prüfen">${icon('lupe')}</button>
-        ${freigabe ? `<button type="button" class="knopf klein nur-live" data-a="freigeben" data-nr="${h(k.nr)}">Freigeben</button>` : ''}
+        <span class="freigabe-platz">${freigabe ? `<button type="button" class="knopf klein nur-live" data-a="freigeben" data-nr="${h(k.nr)}">Freigeben</button>` : ''}</span>
       </div>
     </div></li>`;
   }
@@ -549,12 +561,12 @@
   function terminZeile(t, mitAktionen = true) {
     const rot = t.ueberfaellig;
     return `<li><div class="zeile">
-      ${mitAktionen ? `<input type="checkbox" class="check nur-live" data-a="t-erledigt" data-id="${h(t.id)}" ${t.erledigt ? 'checked' : ''} aria-label="Erledigt">` : ''}
       ${waehlKnopf(bTermin(t))}
-      <div class="haupt"><div class="titel" style="${t.erledigt ? 'text-decoration:line-through;color:var(--text-3)' : ''}">${h(t.titel)}</div>
+      <div class="haupt"><div class="titel${t.erledigt ? ' durch' : ''}">${h(t.titel)}</div>
         <div class="unter"><span class="mono">${h(datumDe(t.datum))}${t.zeit ? ' ' + h(t.zeit) : ''}</span> · ${h(ART_NAME[t.art] || t.art)}${t.notiz ? ' · ' + h(t.notiz) : ''}</div></div>
       <div class="rechts"><span class="status ${rot ? 'rot' : ''}">${t.erledigt ? 'erledigt' : relTage(t.tage)}</span>
-        ${mitAktionen ? `<button type="button" class="icon nur-live" data-a="t-loeschen" data-id="${h(t.id)}" title="Löschen" aria-label="Termin löschen">${icon('muell')}</button>` : ''}</div>
+        ${mitAktionen ? `<button type="button" class="icon erledigt-knopf nur-live${t.erledigt ? ' an' : ''}" data-a="t-erledigt" data-id="${h(t.id)}" data-v="${t.erledigt ? '0' : '1'}" aria-pressed="${!!t.erledigt}" title="${t.erledigt ? 'Wieder öffnen' : 'Als erledigt abhaken'}" aria-label="${t.erledigt ? 'Wieder öffnen' : 'Erledigt'}: ${h(t.titel)}">${icon('haken')}</button>
+        <button type="button" class="icon nur-live" data-a="t-loeschen" data-id="${h(t.id)}" title="Löschen" aria-label="Termin löschen: ${h(t.titel)}">${icon('muell')}</button>` : ''}</div>
     </div></li>`;
   }
 
@@ -615,10 +627,10 @@
             <form class="formular karte" id="termin-form">
               <input type="date" name="datum" required aria-label="Datum">
               <input type="time" name="zeit" aria-label="Uhrzeit">
-              <input type="text" name="titel" required placeholder="Was? z. B. Treffen mit Betreuer" aria-label="Titel" class="breit">
+              <input type="text" name="titel" required placeholder="Was steht an?" aria-label="Titel" class="titel-feld">
               <select name="art" aria-label="Art">${Object.entries(ART_NAME).map(([v, n]) => `<option value="${v}">${n}</option>`).join('')}</select>
               <button type="submit" class="knopf haupt">Eintragen</button>
-              <input type="text" name="notiz" placeholder="Notiz (optional)" aria-label="Notiz" class="breit" style="grid-column:1/-1">
+              <input type="text" name="notiz" placeholder="Notiz, optional" aria-label="Notiz" class="notiz-feld">
             </form>
           </section>
         </div>
@@ -632,7 +644,7 @@
           </section>
         </div>
       </div>
-      <section class="abschnitt"><h2>Wochen bis zur Abgabe</h2>${wochenHtml()}</section>`;
+      <section class="abschnitt"><h2>${S.abgabe?.datum ? 'Wochen bis zur Abgabe' : 'Die nächsten Wochen'}${S.abgabe?.datum ? '' : ' <span class="rechts grau" style="font-family:var(--sans);font-size:13px">Abgabedatum fehlt noch, /start legt es fest</span>'}</h2>${wochenHtml()}</section>`;
   }
 
   // ---------- Hilfe ----------
@@ -655,8 +667,8 @@
     const sys = !LIVE ? '<li class="leer">Den Systemcheck gibt es in der Live-Ansicht.</li>'
       : !checkErgebnis ? '<li class="leer">Prüfe ...</li>'
       : !checkErgebnis.verfuegbar ? '<li class="leer">Systemcheck ist noch nicht installiert. Tipp /hilfe ein.</li>'
-      : checkErgebnis.ergebnisse.map((e) => `<li><div class="zeile"><span class="${e.ok ? 'ok' : e.ok === false ? 'warm' : 'blass'}" style="width:18px;display:inline-flex">${e.ok ? icon('haken') : e.ok === false ? '!' : '·'}</span>
-          <div class="haupt"><div class="titel">${h(e.name)}${e.wert && e.ok ? ` <span class="blass mono" style="font-weight:400">${h(String(e.wert).slice(0, 40))}</span>` : ''}</div>${e.hinweis ? `<div class="unter" style="white-space:normal">${h(e.hinweis)}</div>` : ''}</div></div></li>`).join('');
+      : checkErgebnis.ergebnisse.map((e) => `<li><div class="zeile"><span class="${e.ok ? 'ok' : e.ok === false ? 'warm' : 'blass'}" style="width:18px;display:inline-flex">${e.ok ? icon('haken') : e.ok === false ? '!' : '–'}</span>
+          <div class="haupt"><div class="titel">${h(e.name)}</div>${e.wert && e.ok ? `<div class="unter mono wert" title="${h(e.wert)}">${h(String(e.wert))}</div>` : ''}${e.hinweis ? `<div class="unter" style="white-space:normal">${h(e.hinweis)}</div>` : ''}</div></div></li>`).join('');
     const docs = (S.dokumente?.docs || []);
     return `
       <section class="abschnitt"><h2>So arbeitest du mit dem Kit</h2><div class="karte">
@@ -671,13 +683,15 @@
           <button type="button" class="knopf klein" data-a="auftrag" data-cmd="${c.cmd}">wählen</button></div>
         <p>${h(c.lang)}</p><span class="bsp">Beispiel: ${h(c.bsp)}</span></div>`).join('')}</div></section>
       <div class="zwei">
-        <section class="abschnitt faq"><h2>Wenn es hakt</h2><div class="karte">${FAQ.map(([f, a]) => `<details><summary>${h(f)}</summary><p>${h(a)}</p></details>`).join('')}</div></section>
+        <div>
+          <section class="abschnitt faq"><h2>Wenn es hakt</h2><div class="karte">${FAQ.map(([f, a]) => `<details><summary>${h(f)}</summary><p>${h(a)}</p></details>`).join('')}</div></section>
+          ${docs.length ? `<section class="abschnitt"><h2>Anleitungen</h2><div class="dokumente">${docs.map((d) => `<a class="knopf klein" href="${h(dateiLink('docs/' + d.name))}">${icon('oeffnen')} ${h(d.name.replace(/\.md$/, '').replace(/-/g, ' '))}</a>`).join('')}</div></section>` : ''}
+        </div>
         <section class="abschnitt system"><h2>Technik <span class="rechts">
           <button type="button" class="knopf still klein nur-live" data-a="check-neu">neu prüfen</button>
           <button type="button" class="knopf klein" data-a="auftrag" data-cmd="/hilfe" data-text="Bitte prüfe die Technik und repariere, was geht.">Reparieren lassen</button></span></h2>
           <ul class="liste">${sys}</ul>
-          ${docs.length ? `<h2 style="margin-top:18px">Anleitungen</h2><div class="dokumente">${docs.map((d) => `<a class="knopf klein" href="${h(dateiLink('docs/' + d.name))}">${h(d.name.replace(/\.md$/, ''))}</a>`).join('')}</div>` : ''}
-          <p class="grau mono" style="font-size:12px;margin-top:14px">Kit ${h(S.version || '?')} · ${h(S.root || '')}</p>
+          <p class="fuss mono">Kit ${h(S.version || '?')} · <span title="${h(S.root || '')}">${h(String(S.root || '').split(/[\\/]/).filter(Boolean).slice(-1)[0] || '')}</span></p>
         </section>
       </div>`;
   }
@@ -826,6 +840,10 @@
         try { await post('/api/kapitel/freigeben', { nr: el.dataset.nr }); toast(`Kapitel ${el.dataset.nr} freigegeben.`); holeStand(); }
         catch (err) { toast(err.message); }
         break;
+      case 't-erledigt':
+        try { await post('/api/termin/erledigt', { id: el.dataset.id, erledigt: el.dataset.v === '1' }); toast(el.dataset.v === '1' ? 'Abgehakt.' : 'Wieder offen.'); holeStand(); }
+        catch (err) { toast(err.message); }
+        break;
       case 't-loeschen': {
         const t = (S.termine || []).find((x) => x.id === el.dataset.id);
         try {
@@ -844,9 +862,6 @@
     const el = e.target;
     if (el.id === 'datei-wahl') { await hochladen(el.files); el.value = ''; return; }
     if (el.id === 'sortierung') { ui.sortierung = el.value; merke(); zeichneInhalt(); return; }
-    if (el.dataset.a === 't-erledigt') {
-      try { await post('/api/termin/erledigt', { id: el.dataset.id, erledigt: el.checked }); holeStand(); } catch (err) { toast(err.message); }
-    }
   });
 
   document.addEventListener('input', (e) => {
