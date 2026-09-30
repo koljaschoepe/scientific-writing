@@ -1,27 +1,15 @@
 #!/usr/bin/env node
-// Dashboard-Server. Nur Node-Built-ins, nur localhost.
+// Dashboard-Server. Nur Node-Built-ins, nur 127.0.0.1. Vertrag mit dem Frontend: kit/dashboard/API.md.
 //
 //   node kit/dashboard/server.mjs [--root <pfad>] [--port <n>]   Server im Vordergrund
 //   node kit/dashboard/server.mjs --starten [--oeffnen]            im Hintergrund starten (falls nötig), URL ausgeben
 //   node kit/dashboard/server.mjs --statisch                       nur dashboard.html neu schreiben
-//   node kit/dashboard/server.mjs --stoppen                        laufenden Server beenden
+//   node kit/dashboard/server.mjs --stoppen                        laufenden Server beenden (über POST /api/stop)
 //
-// Export: stelleServerSicher(root) → { url, port, gestartet }, laufInfo(root), schreibeStatisch(root)
+// Export: stelleServerSicher(root) → { url, port, gestartet }, laufInfo(root), schreibeStatisch(root), oeffneImBrowser(url)
 //
-// Endpunkte:
-//   GET  /                         Dashboard
-//   GET  /api/ping                 { ok, root, port, version }
-//   GET  /api/stand                Lagebild (stand.mjs)
-//   GET  /api/check                Systemcheck (kit/werkzeuge/check.mjs, falls vorhanden)
-//   GET  /ereignisse               Server-Sent Events: "stand" bei jeder sichtbaren Änderung
-//   GET  /anpassungen.css|.js      arbeit/dashboard-anpassungen.css|.js (eigene Anpassungen)
-//   GET  /datei/<pfad>             PDFs, Abbildungen, Arbeit.pdf, docs (nur lesend, nur erlaubte Ordner)
-//   POST /api/quelle               { id, status?, stern?, notiz?, markierungen?, kapitel? } → quellen/kandidaten.json
-//   POST /api/upload?name=<datei>  Rohdaten → quellen/eingang/<datei>
-//   POST /api/termin               { datum, titel, zeit?, art?, notiz? } → arbeit/plan.json
-//   POST /api/termin/erledigt      { id, erledigt }
-//   POST /api/termin/loeschen      { id }
-//   POST /api/kapitel/freigeben    { nr } → arbeit/zustand.json
+// Bausteine in kit/dashboard/server/: basis (Hilfen, lib-Brücke), text (/api/text), aenderungen (fs.watch,
+// Schnappschüsse), skills (Werkzeugkasten), pdfbau (PDF auf Knopfdruck), schreiben (alle Schreibaktionen).
 
 import http from 'node:http';
 import fs from 'node:fs';
@@ -29,46 +17,57 @@ import os from 'node:os';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { spawn } from 'node:child_process';
-import { fileURLToPath, pathToFileURL } from 'node:url';
-import {
-  findeRoot, p, existiert, leseJson, schreibeJson, schreibeText, heute, parseDatum,
-  QUELLEN_STATUS, MARKIERUNGEN, kitVersion,
-} from '../werkzeuge/lib.mjs';
+import { fileURLToPath } from 'node:url';
+import { findeRoot, p, existiert, kitVersion } from '../werkzeuge/lib.mjs';
 import { ladeStand } from '../werkzeuge/stand.mjs';
-import { freigeben } from '../werkzeuge/zustand.mjs';
 import { renderSeite } from './render.mjs';
+import {
+  sende, sendeFehler, sendeDatei, leseJsonKoerper, leseJsonLocker, echterPfad, liegtIn, sichererRel, istKaputt, kaputtFehler,
+  HttpFehler, ungueltig, nichtGefunden, TYPEN,
+} from './server/basis.mjs';
+import { leseTextAntwort, ersetzeAbsatz } from './server/text.mjs';
+import { starteAenderungserkennung, leseAenderungen, geaenderteAbsaetze } from './server/aenderungen.mjs';
+import { ladeSkills, leseSkill } from './server/skills.mjs';
+import { erzeugePdfBau } from './server/pdfbau.mjs';
+import { aendereQuelle, termin, kapitelStatus, zitat, zitatEntfernen, upload } from './server/schreiben.mjs';
 
 const STANDARD_PORT = 4711;
+const HIER = path.dirname(fileURLToPath(import.meta.url));
 
 // ---------- Laufzeitinfo (außerhalb des Repos, damit nichts synchronisiert wird) ----------
 
 function infoDatei(root) {
-  const h = crypto.createHash('sha1').update(path.resolve(root).toLowerCase()).digest('hex').slice(0, 10);
+  const h = crypto.createHash('sha1').update(echterPfad(root)).digest('hex').slice(0, 10);
   return path.join(os.tmpdir(), `scientific-writing-dashboard-${h}.json`);
 }
-export function laufInfo(root) { return leseJson(infoDatei(root)); }
+export function laufInfo(root) { return leseJsonLocker(infoDatei(root), null); }
 
 function wunschPort(root) {
-  const pj = leseJson(p(root, 'arbeit', 'projekt.json'));
+  const pj = leseJsonLocker(p(root, 'arbeit', 'projekt.json'), null);
   return Number(pj?.dashboard?.port) || STANDARD_PORT;
 }
 
-function ping(port, timeout = 600) {
+function anfrage(port, { methode = 'GET', weg = '/api/ping', koerper, timeout = 600 } = {}) {
   return new Promise((resolve) => {
-    const req = http.get({ host: '127.0.0.1', port, path: '/api/ping', timeout }, (res) => {
+    const daten = koerper ? JSON.stringify(koerper) : null;
+    const req = http.request({ host: '127.0.0.1', port, path: weg, method: methode, timeout,
+      headers: { Host: `127.0.0.1:${port}`, ...(daten ? { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(daten) } : {}) } }, (res) => {
       let d = ''; res.on('data', (c) => (d += c));
       res.on('end', () => { try { resolve(JSON.parse(d)); } catch { resolve(null); } });
     });
     req.on('timeout', () => { req.destroy(); resolve(null); });
     req.on('error', () => resolve(null));
+    if (daten) req.write(daten);
+    req.end();
   });
 }
+const ping = (port, timeout) => anfrage(port, { timeout });
 
-const gleicherRoot = (a, b) => path.resolve(a || '').toLowerCase() === path.resolve(b || '').toLowerCase();
+const gleicherRoot = (a, b) => !!a && !!b && echterPfad(a) === echterPfad(b);
 
 // Läuft schon ein Server für dieses Projekt? Sonst im Hintergrund starten.
 export async function stelleServerSicher(root) {
-  const kandidaten = [laufInfo(root)?.port, wunschPort(root)].filter(Boolean);
+  const kandidaten = [...new Set([laufInfo(root)?.port, wunschPort(root)].filter(Boolean))];
   for (const port of kandidaten) {
     const r = await ping(port);
     if (r?.ok && gleicherRoot(r.root, root)) return { url: `http://127.0.0.1:${port}/`, port, gestartet: false };
@@ -77,7 +76,7 @@ export async function stelleServerSicher(root) {
     detached: true, stdio: 'ignore', windowsHide: true, cwd: root,
   });
   kind.unref();
-  for (let i = 0; i < 40; i++) {
+  for (let i = 0; i < 60; i++) {
     await new Promise((r) => setTimeout(r, 150));
     const info = laufInfo(root);
     if (info?.port) {
@@ -95,210 +94,237 @@ export function oeffneImBrowser(url) {
   else spawn('xdg-open', [url], opt).unref();
 }
 
+// ---------- Stand ----------
+
+// Stand aus ladeStand() plus die Teile, die nur der Server kennt
+function vollerStand(root, pdfBau) {
+  const stand = ladeStand(root);
+  stand.aenderungen = leseAenderungen(root);
+  try { stand.skills = ladeSkills(root); } catch { stand.skills = []; }
+  stand.pdfBau = pdfBau ? pdfBau.zustand() : erzeugePdfBau(root).zustand();
+  return stand;
+}
+
+function standVersion(stand) {
+  const { erzeugt, standVersion: _v, ...rest } = stand;
+  return crypto.createHash('sha1').update(JSON.stringify(rest)).digest('hex').slice(0, 12);
+}
+
+// Minimaler Stand, wenn eine Projektdatei beschädigt ist (die Seite zeigt dann nur den Hinweis)
+function kaputtStand(root, e) {
+  const f = kaputtFehler(root, e);
+  return { schema: 1, root, version: kitVersion(root), kaputt: [f.extra.datei], notstand: true, erzeugt: new Date().toISOString() };
+}
+
 // ---------- Statische Kopie ----------
 
-export function schreibeStatisch(root, port) {
-  const stand = ladeStand(root);
+export function schreibeStatisch(root, port, pdfBau) {
+  let stand;
+  try { stand = vollerStand(root, pdfBau); } catch (e) { if (!istKaputt(e)) throw e; stand = kaputtStand(root, e); }
+  stand.standVersion = standVersion(stand);
   const html = renderSeite(stand, { statisch: true, port: port || laufInfo(root)?.port || wunschPort(root), root });
-  schreibeText(p(root, 'dashboard.html'), html);
+  // direkt schreiben (schreibeText aus lib legt ab v2.1 ggf. .bak an, das braucht eine generierte Datei nicht)
+  const ziel = p(root, 'dashboard.html');
+  const tmp = `${ziel}.${process.pid}.tmp`;
+  fs.writeFileSync(tmp, html, 'utf8');
+  try { fs.renameSync(tmp, ziel); } catch { fs.writeFileSync(ziel, html, 'utf8'); try { fs.unlinkSync(tmp); } catch {} }
 }
 
-// ---------- Hilfen ----------
+// ---------- Systemcheck asynchron ----------
 
-function sende(res, code, body, typ = 'application/json; charset=utf-8') {
-  const daten = typeof body === 'string' || Buffer.isBuffer(body) ? body : JSON.stringify(body);
-  res.writeHead(code, { 'Content-Type': typ, 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
-  res.end(daten);
-}
-
-function leseKoerper(req, max = 1024 * 1024) {
-  return new Promise((resolve, reject) => {
-    const teile = []; let groesse = 0;
-    req.on('data', (c) => {
-      groesse += c.length;
-      if (groesse > max) { reject(new Error('zu gross')); req.destroy(); return; }
-      teile.push(c);
+function starteCheck(root) {
+  return new Promise((resolve) => {
+    const datei = p(root, 'kit', 'werkzeuge', 'check.mjs');
+    if (!existiert(datei)) return resolve({ verfuegbar: false, ergebnisse: [] });
+    let aus = ''; let err = '';
+    const kind = spawn(process.execPath, [datei, '--json'], { cwd: root, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] });
+    const wecker = setTimeout(() => { try { kind.kill(); } catch {} }, 90000);
+    kind.stdout.on('data', (c) => { if (aus.length < 2e6) aus += c; });
+    kind.stderr.on('data', (c) => { if (err.length < 1e5) err += c; });
+    kind.on('error', (e) => { clearTimeout(wecker); resolve({ verfuegbar: false, ergebnisse: [], fehler: e.message }); });
+    kind.on('close', () => {
+      clearTimeout(wecker);
+      try { resolve({ verfuegbar: true, ergebnisse: JSON.parse(aus) }); }
+      catch { resolve({ verfuegbar: false, ergebnisse: [], fehler: (err.trim().split('\n').pop() || 'Systemcheck lieferte kein Ergebnis.').slice(0, 500) }); }
     });
-    req.on('end', () => resolve(Buffer.concat(teile)));
-    req.on('error', reject);
   });
 }
 
-async function leseJsonKoerper(req) {
-  const b = await leseKoerper(req);
-  return JSON.parse(b.toString('utf8') || '{}');
-}
-
-function sichererName(name) {
-  let n = path.basename(String(name || 'datei')).normalize('NFC');
-  n = n.replace(/[<>:"/\\|?*\u0000-\u001f]/g, '_').replace(/^\.+/, '').trim();
-  if (!n) n = 'datei';
-  if (/^(con|prn|aux|nul|com\d|lpt\d)(\.|$)/i.test(n)) n = '_' + n;
-  return n.slice(0, 180);
-}
-
-function freierName(ordner, name) {
-  if (!existiert(path.join(ordner, name))) return name;
-  const ext = path.extname(name); const basis = name.slice(0, name.length - ext.length);
-  for (let i = 2; i < 1000; i++) {
-    const n = `${basis}-${i}${ext}`;
-    if (!existiert(path.join(ordner, n))) return n;
-  }
-  return `${basis}-${Date.now()}${ext}`;
-}
-
-const TYPEN = {
-  '.pdf': 'application/pdf', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg',
-  '.svg': 'image/svg+xml', '.gif': 'image/gif', '.webp': 'image/webp', '.md': 'text/plain; charset=utf-8',
-  '.txt': 'text/plain; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8',
-};
-const ERLAUBTE_ORDNER = ['quellen/pdfs', 'quellen/eingang', 'abbildungen', 'docs', 'arbeit'];
-
 // ---------- Server ----------
+
+const ERLAUBTE_ORDNER = ['arbeit', 'quellen', 'abbildungen', 'docs'];
+const ERLAUBTE_DATEIEN = ['Arbeit.pdf', 'Vorschau.pdf', 'Arbeit-neu.pdf'];
+const JSON_WEGE = new Set(['/api/quelle', '/api/termin', '/api/termin/erledigt', '/api/termin/loeschen', '/api/termin/wiederherstellen',
+  '/api/kapitel/status', '/api/kapitel/freigeben', '/api/text', '/api/zitat', '/api/zitat/entfernen', '/api/pdf/bauen', '/api/stop']);
+const EINFACHE_TYPEN = /^(application\/x-www-form-urlencoded|multipart\/form-data|text\/plain)\b/i;
 
 async function starteServer(root, portWunsch) {
   let version = '';
   let standCache = null;
+  let aktuellerPort = portWunsch;
   const clients = new Set();
 
-  const berechne = () => {
-    standCache = ladeStand(root);
-    const { erzeugt, ...rest } = standCache;
-    return crypto.createHash('sha1').update(JSON.stringify(rest)).digest('hex').slice(0, 12);
+  const sseSenden = (event, daten) => {
+    const text = `event: ${event}\ndata: ${JSON.stringify(daten)}\n\n`;
+    for (const res of clients) { try { res.write(text); } catch {} }
   };
 
-  let aktuellerPort = portWunsch;
-  const aktualisiere = () => {
+  let aktualisiere = () => {};
+  const pdfBau = erzeugePdfBau(root, { beiEnde: (z) => { sseSenden('pdf', z); aktualisiere(); } });
+
+  const berechne = () => {
+    try { standCache = vollerStand(root, pdfBau); } catch (e) {
+      if (!istKaputt(e)) throw e;
+      standCache = kaputtStand(root, e);
+    }
+    standCache.standVersion = standVersion(standCache);
+    return standCache.standVersion;
+  };
+
+  aktualisiere = () => {
     let v;
     try { v = berechne(); } catch (e) { console.error('Stand fehlerhaft:', e.message); return; }
     if (v === version) return;
     version = v;
-    for (const res of clients) res.write(`event: stand\ndata: ${JSON.stringify({ version })}\n\n`);
-    try { schreibeStatisch(root, aktuellerPort); } catch (e) { console.error('dashboard.html:', e.message); }
+    sseSenden('stand', { version });
+    try { schreibeStatisch(root, aktuellerPort, pdfBau); } catch (e) { console.error('dashboard.html:', e.message); }
   };
 
   let timer = null;
   const entprellt = () => { clearTimeout(timer); timer = setTimeout(aktualisiere, 350); };
 
+  let checkLaeuft = null;
+  let beenden = () => process.exit(0);
+
+  const erlaubteHosts = () => new Set([`127.0.0.1:${aktuellerPort}`, `localhost:${aktuellerPort}`]);
+  const erlaubteOrigins = () => new Set([`http://127.0.0.1:${aktuellerPort}`, `http://localhost:${aktuellerPort}`]);
+
   const server = http.createServer(async (req, res) => {
-    const url = new URL(req.url, 'http://127.0.0.1');
-    const weg = decodeURIComponent(url.pathname);
-    // Nur Aufrufe von localhost-Seiten zulassen (Schutz gegen fremde Webseiten)
-    const herkunft = req.headers.origin;
-    if (req.method === 'POST' && herkunft && !/^https?:\/\/(127\.0\.0\.1|localhost)(:\d+)?$/.test(herkunft) && herkunft !== 'null') {
-      return sende(res, 403, { fehler: 'Nur vom Dashboard aus erlaubt.' });
-    }
     try {
-      if (req.method === 'GET' && (weg === '/' || weg === '/index.html')) {
-        if (!standCache) berechne();
-        return sende(res, 200, renderSeite(standCache, { statisch: false, port: aktuellerPort, root }), 'text/html; charset=utf-8');
+      // DNS-Rebinding: nur Anfragen an 127.0.0.1/localhost mit unserem Port
+      if (!erlaubteHosts().has(String(req.headers.host || '').toLowerCase())) {
+        throw new HttpFehler(403, 'verboten', 'Nur über 127.0.0.1 oder localhost erreichbar.');
       }
-      if (req.method === 'GET' && weg === '/api/ping') {
-        return sende(res, 200, { ok: true, root, port: aktuellerPort, version: kitVersion(root), pid: process.pid });
-      }
-      if (req.method === 'GET' && weg === '/api/stand') {
-        berechne();
-        return sende(res, 200, standCache);
-      }
-      if (req.method === 'GET' && weg === '/api/check') {
-        const datei = p(root, 'kit', 'werkzeuge', 'check.mjs');
-        if (!existiert(datei)) return sende(res, 200, { verfuegbar: false, ergebnisse: [] });
-        const mod = await import(pathToFileURL(datei).href + `?t=${Date.now()}`);
-        const ergebnisse = await (mod.check || mod.default)(root);
-        return sende(res, 200, { verfuegbar: true, ergebnisse });
-      }
-      if (req.method === 'GET' && weg === '/ereignisse') {
-        res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-store', Connection: 'keep-alive' });
-        res.write(`event: stand\ndata: ${JSON.stringify({ version })}\n\n`);
-        clients.add(res);
-        req.on('close', () => clients.delete(res));
-        return;
-      }
-      if (req.method === 'GET' && (weg === '/anpassungen.css' || weg === '/anpassungen.js')) {
-        const ext = path.extname(weg);
-        const datei = p(root, 'arbeit', `dashboard-anpassungen${ext}`);
-        const inhalt = existiert(datei) ? fs.readFileSync(datei) : '';
-        return sende(res, 200, inhalt, TYPEN[ext]);
-      }
-      if (req.method === 'GET' && (weg.startsWith('/datei/') || weg === '/Arbeit.pdf')) {
-        const rel = weg === '/Arbeit.pdf' ? 'Arbeit.pdf' : weg.slice('/datei/'.length);
-        const voll = path.resolve(root, rel);
-        const relNorm = path.relative(root, voll).split(path.sep).join('/');
-        const erlaubt = relNorm === 'Arbeit.pdf' || ERLAUBTE_ORDNER.some((o) => relNorm.startsWith(o + '/'));
-        if (!erlaubt || relNorm.startsWith('..') || !existiert(voll) || !fs.statSync(voll).isFile()) {
-          return sende(res, 404, { fehler: 'Nicht gefunden' });
-        }
-        res.writeHead(200, { 'Content-Type': TYPEN[path.extname(voll).toLowerCase()] || 'application/octet-stream', 'Cache-Control': 'no-store' });
-        return fs.createReadStream(voll).pipe(res);
+      let url; let weg;
+      try {
+        url = new URL(req.url, `http://127.0.0.1:${aktuellerPort}`);
+        weg = decodeURIComponent(url.pathname);
+      } catch { throw ungueltig('Die Adresse ist ungültig.'); }
+      if (weg.includes('\u0000')) throw ungueltig('Die Adresse ist ungültig.');
+
+      const schreibend = req.method === 'POST' || req.method === 'PUT';
+      if (schreibend) {
+        // Fremde Webseiten (auch Origin "null" aus Sandbox/Datei) dürfen nichts ändern
+        const herkunft = req.headers.origin;
+        if (herkunft !== undefined && !erlaubteOrigins().has(herkunft)) throw new HttpFehler(403, 'verboten', 'Nur vom Dashboard aus erlaubt.');
+        const typ = String(req.headers['content-type'] || '');
+        if (JSON_WEGE.has(weg) && !/^application\/json\b/i.test(typ)) throw new HttpFehler(403, 'verboten', 'Anfrage muss JSON sein (Content-Type: application/json).');
+        if (weg === '/api/upload' && (!typ || EINFACHE_TYPEN.test(typ))) throw new HttpFehler(403, 'verboten', 'Upload braucht Content-Type: application/octet-stream.');
       }
 
-      if (req.method === 'POST' && weg === '/api/quelle') {
-        const b = await leseJsonKoerper(req);
-        const datei = p(root, 'quellen', 'kandidaten.json');
-        const k = leseJson(datei, { schema: 1, quellen: [] });
-        const q = (k.quellen || []).find((x) => x.id === b.id || (b.id && x.bibkey === b.id));
-        if (!q) return sende(res, 404, { fehler: 'Quelle nicht im Board. Nur Board-Einträge lassen sich hier ändern.' });
-        if (b.status !== undefined) {
-          if (!QUELLEN_STATUS.includes(b.status)) return sende(res, 400, { fehler: 'Unbekannter Status' });
-          if (q.status !== b.status) q.entschieden = b.status === 'vorschlag' ? null : heute();
-          q.status = b.status;
+      // ----- Lesen -----
+      if (req.method === 'GET' || req.method === 'HEAD') {
+        if (weg === '/' || weg === '/index.html') {
+          if (!standCache) berechne();
+          return sende(res, 200, renderSeite(standCache, { statisch: false, port: aktuellerPort, root }), 'text/html; charset=utf-8',
+            { 'X-Frame-Options': 'DENY', 'Referrer-Policy': 'no-referrer' });
         }
-        if (b.stern !== undefined) q.stern = Math.max(0, Math.min(3, Number(b.stern) || 0));
-        if (b.notiz !== undefined) q.notiz = String(b.notiz).slice(0, 5000);
-        if (b.markierungen !== undefined) {
-          q.markierungen = [...new Set((Array.isArray(b.markierungen) ? b.markierungen : []).filter((m) => MARKIERUNGEN.includes(m)))];
+        if (weg === '/api/ping') {
+          return sende(res, 200, { ok: true, root, pid: process.pid, port: aktuellerPort, version: kitVersion(root) });
         }
-        if (b.kapitel !== undefined) q.kapitel = (Array.isArray(b.kapitel) ? b.kapitel : []).map(String).slice(0, 20);
-        schreibeJson(datei, k);
-        entprellt();
-        return sende(res, 200, { ok: true, quelle: q });
-      }
-      if (req.method === 'POST' && weg === '/api/upload') {
-        const name = sichererName(url.searchParams.get('name') || req.headers['x-dateiname']);
-        const ordner = p(root, 'quellen', 'eingang');
-        fs.mkdirSync(ordner, { recursive: true });
-        const ziel = freierName(ordner, name);
-        const daten = await leseKoerper(req, 300 * 1024 * 1024);
-        fs.writeFileSync(path.join(ordner, ziel), daten);
-        entprellt();
-        return sende(res, 200, { ok: true, name: ziel, pfad: `quellen/eingang/${ziel}` });
-      }
-      if (req.method === 'POST' && weg.startsWith('/api/termin')) {
-        const b = await leseJsonKoerper(req);
-        const datei = p(root, 'arbeit', 'plan.json');
-        const plan = leseJson(datei, { schema: 1, termine: [], tagesziel: { arbeitstage: ['mo', 'di', 'mi', 'do', 'fr'], woerter_manuell: null } });
-        plan.termine ??= [];
-        if (weg === '/api/termin') {
-          if (!parseDatum(b.datum)) return sende(res, 400, { fehler: 'Datum fehlt oder ist ungültig (JJJJ-MM-TT).' });
-          if (!String(b.titel || '').trim()) return sende(res, 400, { fehler: 'Titel fehlt.' });
-          const art = ['betreuung', 'frist', 'labor', 'sonstiges'].includes(b.art) ? b.art : 'sonstiges';
-          const t = { id: 't' + Date.now().toString(36), datum: String(b.datum).slice(0, 10), zeit: String(b.zeit || '').slice(0, 5),
-            titel: String(b.titel).trim().slice(0, 200), art, notiz: String(b.notiz || '').slice(0, 2000), erledigt: false };
-          plan.termine.push(t);
-          schreibeJson(datei, plan);
-          entprellt();
-          return sende(res, 200, { ok: true, termin: t });
+        if (weg === '/api/stand') {
+          berechne();
+          return sende(res, 200, standCache);
         }
-        const t = plan.termine.find((x) => x.id === b.id);
-        if (!t) return sende(res, 404, { fehler: 'Termin nicht gefunden' });
-        if (weg === '/api/termin/erledigt') t.erledigt = !!b.erledigt;
-        else if (weg === '/api/termin/loeschen') plan.termine = plan.termine.filter((x) => x.id !== b.id);
-        else return sende(res, 404, { fehler: 'Unbekannt' });
-        schreibeJson(datei, plan);
-        entprellt();
-        return sende(res, 200, { ok: true });
+        if (weg === '/api/check') {
+          checkLaeuft ??= starteCheck(root).finally(() => { checkLaeuft = null; });
+          return sende(res, 200, await checkLaeuft);
+        }
+        if (weg === '/api/text') {
+          return sende(res, 200, leseTextAntwort(root, url.searchParams.get('datei'), (rel) => geaenderteAbsaetze(root, rel)));
+        }
+        if (weg === '/api/skill') {
+          return sende(res, 200, leseSkill(root, url.searchParams.get('name')));
+        }
+        if (weg === '/ereignisse') {
+          res.writeHead(200, { 'Content-Type': 'text/event-stream; charset=utf-8', 'Cache-Control': 'no-store', Connection: 'keep-alive', 'X-Accel-Buffering': 'no' });
+          if (!version) { try { version = berechne(); } catch {} }
+          res.write(`retry: 2000\n\nevent: hallo\ndata: ${JSON.stringify({ version, pid: process.pid })}\n\nevent: stand\ndata: ${JSON.stringify({ version })}\n\n`);
+          clients.add(res);
+          const weg2 = () => clients.delete(res);
+          req.on('close', weg2);
+          res.on('error', weg2);
+          return;
+        }
+        if (weg === '/anpassungen.css' || weg === '/anpassungen.js') {
+          const ext = path.extname(weg);
+          const datei = p(root, 'arbeit', `dashboard-anpassungen${ext}`);
+          const inhalt = existiert(datei) && liegtIn(p(root, 'arbeit'), datei) ? fs.readFileSync(datei) : '';
+          return sende(res, 200, inhalt, TYPEN[ext]);
+        }
+        if (weg.startsWith('/vendor/')) {
+          const r = sichererRel(weg.slice('/vendor/'.length));
+          const basis = path.join(HIER, 'vendor');
+          const voll = r ? path.join(basis, ...r.split('/')) : null;
+          if (!voll || !existiert(voll) || !liegtIn(basis, voll) || !fs.statSync(voll).isFile()) throw nichtGefunden();
+          return sendeDatei(res, voll);
+        }
+        if (weg.startsWith('/datei/') || ERLAUBTE_DATEIEN.includes(weg.slice(1))) {
+          const r = sichererRel(weg.startsWith('/datei/') ? weg.slice('/datei/'.length) : weg.slice(1));
+          if (!r) throw nichtGefunden();
+          const ordner = ERLAUBTE_ORDNER.find((o) => r.startsWith(o + '/'));
+          if (!ordner && !ERLAUBTE_DATEIEN.includes(r)) throw nichtGefunden();
+          const voll = p(root, ...r.split('/'));
+          // Symlinks dürfen nicht aus dem erlaubten Ordner heraus zeigen
+          if (!existiert(voll) || !liegtIn(ordner ? p(root, ordner) : root, voll) || !fs.statSync(voll).isFile()) throw nichtGefunden();
+          return sendeDatei(res, voll);
+        }
+        throw nichtGefunden();
       }
-      if (req.method === 'POST' && weg === '/api/kapitel/freigeben') {
+
+      // ----- Schreiben -----
+      if (req.method === 'PUT' && weg === '/api/text') {
         const b = await leseJsonKoerper(req);
-        const k = freigeben(root, String(b.nr));
+        const erg = ersetzeAbsatz(root, b);
+        // Antwort aus dem frischen Text (Absatz i nach der Änderung, ggf. mehrere, wenn Leerzeilen eingefügt wurden)
+        const neu = leseTextAntwort(root, erg.rel, (rel) => geaenderteAbsaetze(root, rel));
+        const absatz = neu.absaetze[erg.i] || null;
         entprellt();
-        return sende(res, 200, { ok: true, kapitel: k });
+        return sende(res, 200, { ok: true, version: neu.version, absatz, vorher: erg.vorher, absaetze_anzahl: neu.absaetze.length });
       }
-      return sende(res, 404, { fehler: 'Nicht gefunden' });
+      if (req.method !== 'POST') throw new HttpFehler(405, 'ungueltig', 'Diese Methode geht hier nicht.');
+
+      if (weg === '/api/upload') {
+        const erg = await upload(root, req, url.searchParams.get('name') || req.headers['x-dateiname']);
+        entprellt();
+        return sende(res, 200, erg);
+      }
+      if (!JSON_WEGE.has(weg)) throw nichtGefunden();
+      const b = await leseJsonKoerper(req);
+      let erg;
+      if (weg === '/api/quelle') erg = aendereQuelle(root, b);
+      else if (weg.startsWith('/api/termin')) erg = termin(root, weg, b);
+      else if (weg === '/api/kapitel/status') erg = kapitelStatus(root, b);
+      else if (weg === '/api/kapitel/freigeben') erg = kapitelStatus(root, b, { alias: true });
+      else if (weg === '/api/zitat') erg = zitat(root, b);
+      else if (weg === '/api/zitat/entfernen') erg = zitatEntfernen(root, b);
+      else if (weg === '/api/pdf/bauen') {
+        const r = pdfBau.starte();
+        sseSenden('pdf', pdfBau.zustand());
+        erg = { ok: true, laeuft: true, schon_gestartet: !r.gestartet, pdfBau: pdfBau.zustand() };
+      } else if (weg === '/api/stop') {
+        if (Number(b.pid) !== process.pid) throw new HttpFehler(403, 'verboten', 'Falsche Prozessnummer.');
+        sende(res, 200, { ok: true });
+        setTimeout(() => beenden(), 50);
+        return;
+      }
+      entprellt();
+      return sende(res, 200, erg);
     } catch (e) {
-      return sende(res, 500, { fehler: e.message });
+      return sendeFehler(res, root, e);
     }
   });
+  server.on('clientError', (_e, socket) => { try { socket.end('HTTP/1.1 400 Bad Request\r\n\r\n'); } catch {} });
 
   // Port suchen: Wunschport, sonst die nächsten zehn
   await new Promise((resolve, reject) => {
@@ -321,27 +347,53 @@ async function starteServer(root, portWunsch) {
   });
 
   fs.writeFileSync(infoDatei(root), JSON.stringify({ port: aktuellerPort, pid: process.pid, root, start: new Date().toISOString() }));
-  const aufraeumen = () => {
+  let erkennung = null;
+  beenden = () => {
     try { if (laufInfo(root)?.pid === process.pid) fs.unlinkSync(infoDatei(root)); } catch {}
-    process.exit(0);
+    try { erkennung?.stop(); pdfBau.stop(); } catch {}
+    for (const r of clients) { try { r.end(); } catch {} }
+    server.close();
+    setTimeout(() => process.exit(0), 200).unref();
   };
-  process.on('SIGINT', aufraeumen);
-  process.on('SIGTERM', aufraeumen);
+  process.on('SIGINT', beenden);
+  process.on('SIGTERM', beenden);
 
+  // Änderungserkennung auf arbeit/ (legt beim Start fehlende Schnappschüsse still an)
+  erkennung = starteAenderungserkennung(root, { beiAenderung: entprellt, beiIrgendwas: entprellt, log: (t) => console.error(t) });
   aktualisiere();
 
-  // Dateien beobachten. fs.watch rekursiv geht auf Windows und macOS; Abfrage alle 10 s als Rückfall.
-  for (const ordner of ['arbeit', 'quellen', 'abbildungen']) {
+  // Weitere Ordner beobachten (Stand-Aktualisierung). Rückfall: Abfrage alle 10 s.
+  for (const ordner of ['quellen', 'abbildungen', path.join('.claude', 'skills')]) {
     const voll = p(root, ordner);
     if (!existiert(voll)) continue;
-    try { fs.watch(voll, { recursive: true }, (_ereignis, datei) => { if (!String(datei || '').endsWith('.tmp')) entprellt(); }); } catch {}
+    try { fs.watch(voll, { recursive: true }, (_ereignis, datei) => { if (!String(datei || '').endsWith('.tmp')) entprellt(); }).on('error', () => {}); } catch {}
   }
-  try { fs.watch(root, (_e, datei) => { if (datei === 'Arbeit.pdf') entprellt(); }); } catch {}
+  try { fs.watch(root, (_e, datei) => { if (datei === 'Arbeit.pdf') entprellt(); }).on('error', () => {}); } catch {}
   setInterval(aktualisiere, 10000).unref();
-  setInterval(() => { for (const res of clients) res.write(': ping\n\n'); }, 25000).unref();
+  setInterval(() => { for (const res of clients) { try { res.write(': ping\n\n'); } catch {} } }, 20000).unref();
 
-  console.log(`Dashboard läuft: http://127.0.0.1:${aktuellerPort}/  (Projekt: ${root})`);
+  console.log(`Dashboard läuft: http://127.0.0.1:${aktuellerPort}/  (Projekt: ${root}, Änderungserkennung: ${erkennung.modus})`);
   return aktuellerPort;
+}
+
+// ---------- Stoppen ohne fremde Prozesse zu treffen ----------
+
+async function stoppe(root) {
+  const info = laufInfo(root);
+  if (!info?.port) { console.log('Lief nicht.'); return; }
+  const r = await ping(info.port);
+  if (r?.ok && Number(r.pid) === Number(info.pid) && gleicherRoot(r.root, root)) {
+    await anfrage(info.port, { methode: 'POST', weg: '/api/stop', koerper: { pid: r.pid }, timeout: 2000 });
+    for (let i = 0; i < 20; i++) {
+      await new Promise((ok) => setTimeout(ok, 100));
+      if (!(await ping(info.port, 300))) { console.log('Dashboard gestoppt.'); return; }
+    }
+    console.log('Dashboard reagiert nicht auf Stopp. Bitte das Terminal mit dem Server schließen.');
+    return;
+  }
+  // Veraltete Info-Datei: kein Server von uns auf dem Port. Nichts beenden, nur aufräumen.
+  try { fs.unlinkSync(infoDatei(root)); } catch {}
+  console.log('Lief nicht.');
 }
 
 // ---------- CLI ----------
@@ -352,12 +404,7 @@ async function main() {
   const root = wert('--root') ? path.resolve(wert('--root')) : findeRoot();
 
   if (args.includes('--statisch')) { schreibeStatisch(root); console.log('dashboard.html geschrieben.'); return; }
-  if (args.includes('--stoppen')) {
-    const info = laufInfo(root);
-    if (info?.pid) { try { process.kill(info.pid); console.log('Dashboard gestoppt.'); } catch { console.log('Lief nicht.'); } }
-    else console.log('Lief nicht.');
-    return;
-  }
+  if (args.includes('--stoppen')) { await stoppe(root); return; }
   if (args.includes('--starten')) {
     const r = await stelleServerSicher(root);
     console.log(`Dashboard ${r.gestartet ? 'gestartet' : 'läuft'}: ${r.url}`);

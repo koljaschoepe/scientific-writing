@@ -12,6 +12,8 @@ Kein wochenlanges Vorausplanen ohne Text. Jedes Hauptkapitel nach Fertigstellung
 ## Woran du erkennst, was schon erledigt ist
 
 `arbeit/zustand.json → kapitel[].status`: offen → geplant → entwurf → geprueft → final.
+`geprueft` setzt die Freigabe in `/schreiben` (die Person hat den Entwurf abgenommen), `final`
+erst die Freigabe nach `/pruefen`.
 Der nächste Schritt ist das erste Kapitel in empfohlener Reihenfolge, das nicht mindestens
 `entwurf` ist, oder ein Hauptkapitel, dessen Unterkapitel alle `entwurf` sind (dann prüfen).
 

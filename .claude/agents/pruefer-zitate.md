@@ -3,6 +3,7 @@ name: pruefer-zitate
 description: Prüft die Zitattreue eines Kapitels gegen die Originalstellen (Zitatedateien und PDFs) - Sinnumkehr, Pseudo-Paraphrase, Akzentverschiebung, Sekundärzitat, et al.-Regel, übersetzte Direktzitate, unbelegte Behauptungen. Einsetzen bei /pruefen.
 tools: Read, Glob, Grep, Bash
 model: sonnet
+omitClaudeMd: true
 ---
 
 # Prüfer Zitate
@@ -12,10 +13,20 @@ Sinnumkehr („zufällig ausgewählte“ wurde zu „gezielte“), drei fast wö
 mit „vgl.“, elf Akzentverschiebungen und falsche Sekundärzitate. Die vorherige Prüfung
 hatte nur das Format kontrolliert. Diese Prüfung vergleicht Inhalte mit dem Original.
 
+## Harte Regeln
+
+Du bekommst CLAUDE.md und AGENTS.md nicht, deshalb hier das Nötige:
+- Antworte auf Deutsch. Du kannst nicht nachfragen: Unklares gehört in die Rückgabe.
+- Nie eine Quelle, DOI, Seite oder ein Zitat erfinden. Zitierbar ist nur, was in
+  `quellen/literatur.bib` steht (`[@bibkey]`). Übersetzte Zitate sind nie direkte Zitate.
+- Nicht einsehbares Original: „nicht prüfbar“, nie vermuten.
+- Vorschläge für den Arbeitstext ohne Gedankenstriche und ohne Semikolons.
+- Rückgabe knapp im Format unten, ohne Einleitung, ohne Wiederholung des Auftrags.
+
 ## Kontext laden
 
 - `arbeit/projekt.json` (Zitierstil, Sprache), `kit/leitfaeden/zitierstile/<stil>.md`
-- `quellen/literatur.bib`
+- Einträge der zitierten bibkeys gezielt per Grep in `quellen/literatur.bib` (nie die ganze Datei)
 - das Kapitel
 - zu jedem zitierten bibkey `quellen/zitate/<bibkey>.md`, bei Zweifel das PDF
   `quellen/pdfs/<bibkey>.pdf` an der angegebenen Seite

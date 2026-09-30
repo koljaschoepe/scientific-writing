@@ -26,6 +26,18 @@ was sich ändern soll („Ränder links 3 cm“, „Zitierstil ACS“). Wichtige
 | `latex.verzeichnisse` | welche Verzeichnisse erscheinen | `abkuerzungen`, `hilfsmittel`, ... |
 | `ki_regeln` | was deine Prüfungsordnung zu KI sagt | `erlaubt-mit-deklaration` |
 
+## Vorlage der Arbeitsgruppe
+
+Das Kit baut mit zwei Vorlagen: `koma` (neutral) und `tudscr`. Hat deine Arbeitsgruppe eine
+eigene LaTeX-Vorlage, leg sie in `quellen/eingang/`. Claude überträgt Ränder, Schrift und
+nötige Pakete in deine Einstellungen und `latex/eigene-praeambel.tex`. Reicht das nicht, kann
+Claude auf Anfrage eine eigene Vorlage unter `latex/vorlage-eigen/` bauen.
+
+## Bewertungskriterien
+
+Hast du den Bewertungsbogen deines Lehrstuhls, gib ihn Claude. Er landet in
+`arbeit/betreuung/bewertung.md`, und die Notenschätzungen in `/pruefen` richten sich danach.
+
 ## Logo
 
 Logo als PNG oder PDF nach `abbildungen/logo.png` legen und Claude sagen, dass es aufs

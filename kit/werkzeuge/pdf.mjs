@@ -5,20 +5,23 @@
 //   node kit/werkzeuge/pdf.mjs                fertiges PDF nach Arbeit.pdf
 //   node kit/werkzeuge/pdf.mjs entwurf        Entwurf mit Platzhaltern und Wasserzeichen
 //   node kit/werkzeuge/pdf.mjs expose         Exposé (arbeit/expose/expose.md) als eigenes PDF
+//   node kit/werkzeuge/pdf.mjs docx           Word-Fassung Arbeit.docx (Pandoc --citeproc, CSL aus latex/vorlage/csl/)
 //   node kit/werkzeuge/pdf.mjs check          nur prüfen, ob Pandoc und LaTeX da sind
 // Optionen:
-//   --json      Ergebnis als JSON auf stdout (für Skills und Dashboard)
+//   --json      Ergebnis als JSON auf stdout (für Skills und Dashboard), immer mit
+//               { ok, datei, meldung, dauer_ms } plus Details (fehler, warnungen, seiten ...)
 //   --nur-tex   nur LaTeX-Dateien erzeugen, nicht kompilieren
 //   --oeffnen   PDF nach Erfolg im Standardprogramm öffnen
 //
 // Nur Node-Built-ins, läuft auf Windows und macOS. Exit-Codes: 0 ok,
-// 1 Fehler beim Bauen, 2 Werkzeug fehlt.
+// 1 Fehler beim Bauen, 2 Werkzeug fehlt, 5 arbeit/projekt.json oder zustand.json beschädigt.
 
 import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { leseJson as libLeseJson, JsonKaputt, meldungKaputt } from './lib.mjs';
 
 const WIN = process.platform === 'win32';
 const MAC = process.platform === 'darwin';
@@ -32,8 +35,9 @@ const BUILD = P('latex', 'build');
 // Kleine Helfer
 // ---------------------------------------------------------------------------
 
+// Fehlt die Datei: standard. Ist sie beschädigt: JsonKaputt (main bricht mit Exit 5 ab, baut nichts).
 function leseJson(datei, standard) {
-  try { return JSON.parse(fs.readFileSync(datei, 'utf8')); } catch { return standard; }
+  return libLeseJson(datei, standard) ?? standard;
 }
 function leseText(datei) {
   try { return fs.readFileSync(datei, 'utf8'); } catch { return ''; }
@@ -952,6 +956,112 @@ function baueExpose(optionen) {
   return ergebnis;
 }
 
+// ---------------------------------------------------------------------------
+// Word-Export: Arbeit.docx über Pandoc mit citeproc
+// ---------------------------------------------------------------------------
+
+const CSL = {
+  'chem-acs': 'american-chemical-society', 'chem-rsc': 'royal-society-of-chemistry', 'chem-angew': 'angewandte-chemie',
+  ieee: 'ieee', numeric: 'ieee', apa: 'apa', 'harvard-de': 'din-1505-2', authoryear: 'harvard-cite-them-right',
+};
+
+function cslDatei(stil) {
+  const eigen = P('latex', 'eigene.csl');
+  if (fs.existsSync(eigen)) return eigen;
+  const name = CSL[stil] || 'harvard-cite-them-right';
+  for (const n of [name, 'harvard-cite-them-right']) {
+    const f = path.join(VORLAGE, 'csl', `${n}.csl`);
+    if (fs.existsSync(f)) return f;
+  }
+  return null;
+}
+
+function baueDocx() {
+  const ergebnis = { ok: false, modus: 'docx', pdf: null, docx: null, seiten: null, engine: 'pandoc', fehler: [], warnungen: [], fehlende_kapitel: [], fehlende_werkzeuge: [], hinweise: [] };
+  const werkzeuge = pruefeWerkzeuge();
+  if (!werkzeuge.pandoc) {
+    ergebnis.fehlende_werkzeuge = ['pandoc']; ergebnis.hinweise = installHinweise(['pandoc']); ergebnis.code = 2; return ergebnis;
+  }
+  const projekt = leseJson(P('arbeit', 'projekt.json'), {});
+  const zustand = leseJson(P('arbeit', 'zustand.json'), {});
+  const a = projekt.arbeit || {};
+  const englisch = a.sprache === 'en';
+  const kapitel = sammleKapitel(zustand);
+  const titel = hauptkapitelTitel(zustand);
+  const teile = [];
+  let aktuellesHaupt = null, geschrieben = 0;
+  for (const k of kapitel) {
+    const haupt = k.arr[0];
+    if (haupt !== aktuellesHaupt) {
+      aktuellesHaupt = haupt;
+      // Nummern stehen im Text (## 2.1 Titel), deshalb auch hier von Hand statt --number-sections
+      teile.push(titel[String(haupt)] ? `# ${haupt} ${titel[String(haupt)]}` : `# ${englisch ? 'Chapter' : 'Kapitel'} ${haupt}`);
+    }
+    if (!k.datei) { if (k.arr.length > 1) ergebnis.fehlende_kapitel.push(k.nr); continue; }
+    let md = leseText(k.datei).replace(/\r\n?/g, '\n');
+    if (!md.trim()) continue;
+    if (k.arr.length === 1) md = md.replace(/^#\s+.*$/m, ''); // Einleitungstext: keine zweite Kapitelüberschrift
+    teile.push(md.trim());
+    geschrieben++;
+  }
+  if (!geschrieben) {
+    ergebnis.fehler.push({ meldung: 'Keine Kapiteltexte gefunden.', erklaerung: 'In arbeit/kapitel/ steht noch kein Text. Für Word braucht es mindestens ein geschriebenes Kapitel.' });
+    ergebnis.code = 1; return ergebnis;
+  }
+  const md = teile.join('\n\n')
+    // nummerierte Formeln: $$ ... $$ {#eq:name} -> Formel ohne Label (Word kennt keine LaTeX-Labels)
+    .replace(/\$\$([\s\S]+?)\$\$\s*\{#eq:[^}\s]+\}/g, (_, f) => `$$${f.trim()}$$`)
+    // Chemie lesbar statt verschluckt: \ce{H2O} -> H2O
+    .replace(/\\ce\{([^{}]*)\}/g, '$1');
+  if (/\\(qty|SI|unit|cref|chemfig)\b/.test(md)) {
+    ergebnis.warnungen.push('Einheiten (\\qty), Querverweise (\\cref) und Strukturformeln erscheinen in Word nicht vollständig. Maßgeblich bleibt das PDF.');
+  }
+  const bib = P('quellen', 'literatur.bib');
+  const hatBib = /@\w+\s*\{/.test(leseText(bib));
+  const args = [
+    '-f', 'markdown+raw_tex+tex_math_dollars+pipe_tables+implicit_figures+link_attributes+smart',
+    '-t', 'docx',
+    '-M', `lang=${englisch ? 'en-GB' : 'de-DE'}`,
+    `--resource-path=${['.', 'abbildungen', path.join('arbeit', 'kapitel')].join(path.delimiter)}`,
+  ];
+  if (!istLeer(a.titel)) args.push('-M', `title=${a.titel}`);
+  if (!istLeer(a.untertitel)) args.push('-M', `subtitle=${a.untertitel}`);
+  if (!istLeer(projekt.autor?.name)) args.push('-M', `author=${projekt.autor.name}`);
+  if (hatBib) {
+    args.push('--citeproc', '--bibliography', bib, '-M', `reference-section-title=${englisch ? 'References' : 'Literaturverzeichnis'}`);
+    const csl = cslDatei(projekt.zitation?.stil);
+    if (csl) args.push('--csl', csl);
+    else ergebnis.warnungen.push('Kein Zitierstil in latex/vorlage/csl/ gefunden, Pandoc nutzt seinen Standard (Chicago).');
+  } else if (/\[-?@/.test(md)) {
+    ergebnis.warnungen.push('Im Text stehen Zitate, aber quellen/literatur.bib ist leer. Die Schlüssel bleiben als Text stehen.');
+  }
+  const referenz = path.join(VORLAGE, 'referenz.docx');
+  if (fs.existsSync(referenz)) args.push('--reference-doc', referenz);
+  let ziel = 'Arbeit.docx';
+  const tmp = P(`Arbeit.${process.pid}.docx.tmp`);
+  const r = starte(werkzeuge.pandoc, [...args, '-o', tmp], { input: md, timeout: 300000 });
+  if (r.code !== 0) {
+    try { fs.unlinkSync(tmp); } catch {}
+    ergebnis.fehler.push({ meldung: (r.err || 'Pandoc ist fehlgeschlagen.').trim().split('\n')[0], erklaerung: 'Pandoc konnte die Word-Datei nicht erzeugen. Meist ein kaputter Tabellen- oder Bildaufbau im Markdown oder ein fehlerhafter Eintrag in quellen/literatur.bib.' });
+    ergebnis.code = 1; return ergebnis;
+  }
+  for (const zeile of (r.err || '').split('\n')) {
+    const m = /Citeproc: citation (\S+) not found/.exec(zeile);
+    if (m) ergebnis.warnungen.push(`Zitat @${m[1]} steht nicht in quellen/literatur.bib.`);
+  }
+  try { fs.renameSync(tmp, P(ziel)); } catch {
+    // Word hält die Datei unter Windows offen
+    ziel = 'Arbeit-neu.docx';
+    try { fs.renameSync(tmp, P(ziel)); } catch (e) { try { fs.unlinkSync(tmp); } catch {} throw e; }
+    ergebnis.warnungen.push(`Arbeit.docx ist gerade in Word geöffnet. Die neue Fassung liegt als ${ziel} daneben. Word schließen und erneut exportieren.`);
+  }
+  if (ergebnis.fehlende_kapitel.length) ergebnis.warnungen.push(`Noch nicht geschrieben: ${ergebnis.fehlende_kapitel.join(', ')}.`);
+  ergebnis.docx = ziel;
+  ergebnis.kapitel_geschrieben = geschrieben;
+  ergebnis.ok = true; ergebnis.code = 0;
+  return ergebnis;
+}
+
 function zaehleSeiten(datei) {
   try {
     const s = fs.readFileSync(datei, 'latin1');
@@ -980,10 +1090,15 @@ function ausgabeText(e) {
   }
   if (e.build) {
     z.push(`LaTeX-Dateien erzeugt in ${e.build}.`);
+  } else if (e.kaputt) {
+    z.push(e.kaputt);
+    return z.join('\n');
+  } else if (e.ok && e.modus === 'docx') {
+    z.push(`Word-Datei fertig: ${e.docx}.`);
   } else if (e.ok) {
     z.push(`PDF fertig (${e.modus}): ${e.pdf}${e.seiten ? `, ${e.seiten} Seiten` : ''}, gebaut mit ${e.engine}.`);
   } else {
-    z.push('Das PDF konnte nicht gebaut werden.');
+    z.push(e.modus === 'docx' ? 'Die Word-Datei konnte nicht erzeugt werden.' : 'Das PDF konnte nicht gebaut werden.');
   }
   for (const f of e.fehler) {
     z.push('', `Fehler: ${f.erklaerung}`);
@@ -1014,17 +1129,30 @@ function main() {
     }
     process.exit(erg.ok ? 0 : 2);
   }
+  const start = Date.now();
   let e;
   try {
     e = args.includes('expose')
       ? baueExpose({ nurTex: args.includes('--nur-tex') })
-      : baue({ entwurf: args.includes('entwurf'), nurTex: args.includes('--nur-tex') });
+      : args.includes('docx') ? baueDocx()
+        : baue({ entwurf: args.includes('entwurf'), nurTex: args.includes('--nur-tex') });
   } catch (err) {
-    e = { ok: false, code: 1, fehler: [{ meldung: String(err && err.message || err), erklaerung: 'Unerwarteter Fehler im PDF-Werkzeug.' }], warnungen: [] };
+    if (err instanceof JsonKaputt) {
+      e = { ok: false, code: 5, modus: args.includes('docx') ? 'docx' : args.includes('expose') ? 'expose' : args.includes('entwurf') ? 'entwurf' : 'final',
+        kaputt: meldungKaputt(err, ROOT), fehler: [{ meldung: err.message, erklaerung: meldungKaputt(err, ROOT) }], warnungen: [] };
+    } else {
+      e = { ok: false, code: 1, fehler: [{ meldung: String(err && err.message || err), erklaerung: 'Unerwarteter Fehler im PDF-Werkzeug.' }], warnungen: [] };
+    }
   }
+  e.warnungen ??= [];
+  e.fehler ??= [];
+  // Einheitliche Kurzform für das Dashboard: { ok, datei, meldung, dauer_ms }
+  e.datei = e.docx || e.pdf || null;
+  e.meldung = ausgabeText(e).split('\n').filter(Boolean).slice(0, e.ok ? 1 : 2).join(' ').replace(/(^| )Fehler: /, '$1');
+  e.dauer_ms = Date.now() - start;
   if (json) console.log(JSON.stringify(e, null, 2));
   else console.log(ausgabeText(e));
-  if (e.ok && e.pdf && args.includes('--oeffnen')) oeffne(e.pdf);
+  if (e.ok && e.datei && args.includes('--oeffnen')) oeffne(e.datei);
   process.exit(e.code ?? (e.ok ? 0 : 1));
 }
 

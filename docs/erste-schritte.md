@@ -11,7 +11,11 @@
   eine Quelle schwach, sagt Claude das zuerst, freundlich und mit Begründung. Du entscheidest.
 - **Du kannst jederzeit einfach schreiben.** „Ich verstehe den Unterschied zwischen
   Random Forest und neuronalen Netzen nicht“ ist eine völlig normale Eingabe.
-- **Nichts geht kaputt.** Alles liegt in Git. Was schiefgeht, lässt sich zurückholen.
+- **Nichts geht kaputt.** Im Dashboard gibt es nach jeder Aktion „Rückgängig“, Claudes
+  Änderungen nimmt der Rewind-Knopf zurück, und alles mit `/sync` Gesicherte lässt sich
+  zurückholen. Mehr: [befehle.md](befehle.md#rückgängig-machen).
+- **Claude fasst sich kurz.** Ein Satz Ergebnis, ein paar Stichpunkte, dann klickbare Links
+  zu den geänderten Dateien.
 
 ## Minute 0 bis 10: /start
 
@@ -46,7 +50,8 @@ noch offen, entwickelt Claude mit dir drei Varianten und prüft sie auf Machbark
 1. VS Code öffnen. Claude begrüßt dich mit dem Stand: Phase, nächster Schritt, Tage bis
    zur Abgabe.
 2. `/weiter`, oder gezielt `/recherche`, `/schreiben 2.1`, `/pruefen 2.1`.
-3. Zwischendurch im Dashboard Quellen sichten: nehmen, verwerfen, Stern vergeben.
+3. Zwischendurch im Dashboard Quellen sichten, Kapitel lesen, einzelne Absätze korrigieren
+   oder das PDF aktualisieren. Claude erfährt beim nächsten Auftrag, was du dort getan hast.
 4. Am Ende: `/sync`. Damit ist alles auf GitHub gesichert. Das passiert **nicht**
    automatisch. Claude erinnert dich, wenn es länger als zwei Tage her ist.
 

@@ -6,16 +6,34 @@
 | Befehl | Was er tut | Wann |
 | --- | --- | --- |
 | `/start` | Richtet dein Projekt per Interview ein, später: Einstellungen ändern | ganz am Anfang, bei geänderten Vorgaben |
-| `/weiter` | Macht den nächsten sinnvollen Schritt deiner aktuellen Phase und fragt am Ende, ob du das Ergebnis freigibst | immer, wenn du nicht weißt, was jetzt dran ist |
-| `/recherche [thema]` | Sucht Literatur (Fachdatenbanken, SLUB, Google Scholar, Web) und legt Vorschläge im Dashboard ab | Recherche-Phase, später für Lücken |
-| `/quellen` | Verarbeitet deine Entscheidungen und hochgeladene PDFs: Literaturverzeichnis, Volltext, Zitate mit Seitenzahl | nachdem du im Dashboard Quellen genommen hast |
-| `/schreiben [nr]` | Plant und schreibt ein Unterkapitel oder überarbeitet deinen eigenen Text | Schreibphase |
-| `/pruefen [nr\|alles]` | Prüft Sprache, Zitattreue, Argumentation (mit Notenschätzung), Fachliches und Umfang | nach jedem Kapitel, vor der Abgabe |
-| `/pdf [entwurf]` | Baut das PDF deiner Arbeit, `entwurf` auch mit Lücken | jederzeit zum Anschauen |
+| `/weiter` | Macht den nächsten sinnvollen Schritt deiner Phase und fragt am Ende, ob du das Ergebnis freigibst | immer, wenn du nicht weißt, was jetzt dran ist |
+| `/recherche [thema]` | Sucht Literatur und legt Vorschläge im Dashboard ab | Recherche-Phase, später für Lücken |
+| `/quellen` | Verarbeitet deine Entscheidungen, Uploads, Zotero-Exporte und im Dashboard markierte Zitate | nachdem du im Dashboard Quellen genommen hast |
+| `/schreiben [nr]` | Plant und schreibt ein Unterkapitel oder überarbeitet deinen Text | Schreibphase |
+| `/pruefen [nr\|alles\|final]` | Prüft Sprache, Zitattreue, Argumentation (mit Notenschätzung), Fachliches und Umfang | nach jedem Kapitel, vor der Abgabe |
+| `/pdf [entwurf\|expose\|docx]` | Baut das PDF, einen Entwurf, das Exposé oder eine Word-Datei | zum Anschauen, für die Betreuung |
 | `/sync` | Sichert alles und gleicht mit GitHub ab | am Ende jedes Arbeitstags |
-| `/update` | Holt eine neue Version des Kits, deine Arbeit bleibt unberührt | wenn Claude oder das Dashboard ein Update meldet |
-| `/hilfe [frage]` | Zeigt, wo du stehst, prüft das System und repariert, was geht | wenn etwas hakt |
-| `/dashboard [anpassen …]` | Öffnet das Dashboard oder baut es nach deinen Wünschen um | Überblick, Umbau |
+| `/update` | Holt eine neue Version des Kits, deine Arbeit und eigene Befehle bleiben unberührt | wenn ein Update gemeldet wird |
+| `/hilfe [frage]` | Zeigt, wo du stehst, prüft und repariert das System, erklärt Rückgängig | wenn etwas hakt |
+| `/dashboard [anpassen …]` | Öffnet das Dashboard, baut es um oder legt einen eigenen Befehl an | Überblick, Umbau |
+
+`/recherche`, `/quellen`, `/schreiben`, `/pruefen`, `/pdf` und `/hilfe` startet Claude auch von
+selbst, wenn dein Auftrag dazu passt. Die übrigen nur, wenn du sie tippst.
+
+## Word für die Betreuung
+
+Kommentiert deine Betreuung lieber in Word als im PDF: `/pdf docx`. Claude baut
+`Arbeit.docx` aus deinen Kapiteln, mit Literaturverzeichnis. Die Kommentare trägst du danach einfach in den Chat oder legst
+die Datei in `quellen/eingang/`.
+
+## Rückgängig machen
+
+- **Im Dashboard:** nach jeder Aktion unten „Rückgängig“.
+- **Was Claude geändert hat:** in VS Code der Rewind-Knopf am Eingabefeld (in der Konsole
+  zweimal Esc).
+- **Grenze:** Rewind holt keine Dateien zurück, die ein Hilfsagent (etwa beim Kapitelschreiben)
+  oder ein Befehl im Terminal geschrieben hat. Dafür gibt es `/sync`: Jeder gesicherte Stand
+  lässt sich zurückholen. Frag im Zweifel `/hilfe`.
 
 ## Beispiele für freie Aufträge
 
@@ -25,5 +43,8 @@ Du musst keinen Befehl kennen. Diese Sätze funktionieren genauso:
 - „Such mir drei Übersichtsartikel zu maschinellem Lernen in der Retrosynthese.“
 - „Ich habe Kapitel 3.2 selbst geschrieben, schau drüber und mach es besser.“
 - „Mach mir aus `daten/ergebnisse/messung.csv` eine Abbildung für Kapitel 4.“
-- „Bereite mein Gespräch mit meinem Betreuer am Donnerstag vor.“
+- „Bereite mein Gespräch mit meiner Betreuung am Donnerstag vor.“
 - „Was fehlt noch bis zur Abgabe?“
+
+Claude antwortet kurz: ein Satz Ergebnis, ein paar Stichpunkte, dann klickbare Links zu den
+geänderten Dateien.

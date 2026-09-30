@@ -16,7 +16,8 @@ In einem Schritt:
 2. **Holen**: Hast du auf einem anderen Rechner weitergearbeitet, kommt dieser Stand dazu.
 3. **Hochladen**: Der gemeinsame Stand geht auf GitHub.
 
-`/sync` passiert **nie automatisch**. Mach es am Ende jedes Arbeitstags. Claude erinnert dich
+`/sync` passiert **nie automatisch** und arbeitet immer direkt auf deinem einen Stand, ohne
+Nebenzweige. Mach es am Ende jedes Arbeitstags. Claude erinnert dich
 beim Start, wenn der letzte Sync länger als zwei Tage her ist, und das Dashboard zeigt es an.
 
 ## Was, wenn es einen Konflikt gibt?
@@ -35,7 +36,13 @@ ist. GitHub nimmt höchstens 100 MB pro Datei an. Größere Dateien meldet `/syn
 Ja: auf github.com dein Projekt öffnen, Settings, Collaborators, Add people. Einfacher ist
 meist, ihm das PDF zu schicken (`/pdf`).
 
+## Was wird nicht gesichert?
+
+Der Ordner `.lokal/` gehört zu diesem Rechner (Tagesaktivität, zuletzt geänderte Absätze,
+Dashboard-Protokoll) und bleibt bewusst lokal. So entstehen keine Konflikte zwischen zwei
+Rechnern.
+
 ## Updates des Kits
 
 Neue Funktionen des Kits kommen nicht über `/sync`, sondern über `/update`. Das ändert nur die
-Kit-Dateien, nie deine Arbeit.
+Kit-Dateien, nie deine Arbeit und nie deine eigenen Befehle.

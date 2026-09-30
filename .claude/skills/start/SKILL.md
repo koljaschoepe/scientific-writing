@@ -3,9 +3,14 @@ name: start
 description: Richtet das Projekt per Interview ein (Arbeit, Person, Fristen, KI-Regeln, Format, Werkzeuge) oder ändert bestehende Einstellungen.
 argument-hint: "[bereich, z. B. fristen]"
 disable-model-invocation: true
+gruppe: arbeit
 ---
 
 # /start: Projekt einrichten
+
+**Wichtig:** Jede Frage über das Rückfrage-Tool (in Claude Code: AskUserQuestion), bis zu 4
+Fragen je Runde. „Später klären“ wird als leerer String gespeichert. Relative Daten immer in
+echte Daten umrechnen. Nie Passwörter tippen. Zustand nur über `zustand.mjs`.
 
 ## Wann
 
@@ -17,7 +22,7 @@ disable-model-invocation: true
 
 1. `node kit/werkzeuge/zustand.mjs init` (legt fehlende Dateien aus `kit/vorlagen/arbeit/` an).
 2. `arbeit/projekt.json`, `arbeit/zustand.json`, `arbeit/plan.json` lesen.
-3. `kit/leitfaeden/interview.md` beachten. Jede Frage über AskUserQuestion.
+3. `kit/leitfaeden/interview.md` beachten.
 
 ## Ablauf bei bestehender Einrichtung
 
@@ -133,8 +138,12 @@ Rechne relative Angaben in echte Daten um (heutiges Datum per `node -e "console.
    - „Nein, nimm die Standardvorlage (Empfohlen)“: `koma`, schlicht und hochschulneutral
    - „Ja, ein Merkblatt als PDF“: Person legt es nach `quellen/eingang/` (oder nennt den Pfad),
      du liest es und überträgst Ränder, Schrift, Zeilenabstand, Pflichtbestandteile.
-     Werte danach per Interview bestätigen lassen.
-   - „Ja, eine LaTeX-Vorlage der Arbeitsgruppe“: `eigene`, Dateien nach `latex/vorlage-ag/`
+     Werte danach per Interview bestätigen lassen. Stehen im Merkblatt Bewertungskriterien,
+     diese nach `arbeit/betreuung/bewertung.md` übertragen.
+   - „Ja, eine LaTeX-Vorlage der Arbeitsgruppe“: Person legt sie nach `quellen/eingang/`.
+     Ehrlich sagen: Das Kit baut mit `koma` oder `tudscr`. Claude überträgt Ränder, Schrift und
+     Pakete nach `projekt.json` und `latex/eigene-praeambel.tex` (Empfohlen) oder baut auf
+     Wunsch später eine eigene Vorlage unter `latex/vorlage-eigen/` (siehe `/pdf`).
    - „TU-Dresden-Klasse tudscr“: `tudscr`, Hinweis: nutzt noch das alte Corporate Design (Stand 2026-09)
 3. „Sollen Deckblatt und Verzeichnisse wie üblich angelegt werden?“ header „Verzeichnisse“
    - „Ja, Standard (Empfohlen)“: Abbildungen, Tabellen, Abkürzungen, Hilfsmittel, Abstract,
@@ -152,15 +161,16 @@ Rechne relative Angaben in echte Daten um (heutiges Datum per `node -e "console.
      Python wissen, ich übernehme das.“
    - „Später“ / „Nein“
 2. „Nutzt du Zotero für Literatur?“ header „Zotero“
-   - „Nein, Claude verwaltet die Quellen (Empfohlen)“ / „Ja“ (dann Anleitung aus
-     `kit/leitfaeden/recherche.md`, Abschnitt Zotero, `werkzeuge.zotero: true`)
+   - „Nein, Claude verwaltet die Quellen (Empfohlen)“ / „Ja“ (dann `werkzeuge.zotero: true`
+     und Anleitung aus `kit/leitfaeden/recherche.md`, Abschnitt Zotero: Better BibTeX exportiert
+     direkt nach `quellen/literatur.bib` oder per `node kit/werkzeuge/bib.mjs import <datei>`)
 3. „Soll ich dir den Browser-Zugang zur Bibliothek einrichten?“ header „Bibliothek“
    - „Ja, jetzt (Empfohlen)“: Playwright öffnet die Anmeldeseite der Bibliothek (bei TU Dresden
      `https://katalog.slub-dresden.de`, Login über ZIH/Shibboleth). Person meldet sich selbst an.
      Du tippst nie Passwörter.
    - „Später“: kommt bei der ersten Recherche
 4. Nur wenn der Systemcheck Probleme meldet: „Einige Programme fehlen noch (<Liste in Klartext>).
-   Soll ich sie jetzt reparieren?“ header „Reparieren“ – „Ja (Empfohlen)“, „Später mit /hilfe“.
+   Soll ich sie jetzt reparieren?“ header „Reparieren“: „Ja (Empfohlen)“, „Später mit /hilfe“.
 
 ## Speichern
 
@@ -177,18 +187,20 @@ Rechne relative Angaben in echte Daten um (heutiges Datum per `node -e "console.
    ```
    node kit/werkzeuge/zustand.mjs phase thema
    node kit/werkzeuge/zustand.mjs verlauf "Projekt eingerichtet"
-   node kit/werkzeuge/zustand.mjs pruefe-abzeichen
+   node kit/werkzeuge/zustand.mjs naechster "Thema schärfen mit /weiter"
    ```
 
 ## Ausgabe
 
-Kurze Zusammenfassung als Tabelle (Arbeit, Fach, Sprache, Abgabe mit Tagen bis dahin,
-Betreuung, KI-Regeln, Schreibmodus, Zitierstil, Systemcheck in Klartext). Dann ein Satz
-zum Dashboard: „Deinen Überblick findest du im Dashboard (`/dashboard`).“
+Endausgabe laut `AGENTS.md`, keine Tabelle (alles steht im Dashboard und in `arbeit/projekt.json`):
+- Satz: „Eingerichtet: <Arbeitstyp> in <Fach>, Abgabe in <n> Tagen (<Datum>).“
+- Höchstens drei Stichpunkte: offene Punkte für die Betreuung, Systemcheck in Klartext,
+  Hinweis auf das Dashboard.
+- `Geändert:` mit Links zu `arbeit/projekt.json`, `arbeit/plan.json`, `arbeit/thema/thema.md`.
 
 ## Abschluss-Interview
 
 „Wie möchtest du weitermachen?“ header „Weiter“
-- „Mit dem Thema starten (Empfohlen)“: direkt `/weiter` ausführen (Phase thema)
-- „Erst das Dashboard ansehen“: `/dashboard`
+- „Mit dem Thema starten (Empfohlen)“: `.claude/skills/weiter/SKILL.md` lesen und befolgen (Phase thema)
+- „Erst das Dashboard ansehen“: `node kit/dashboard/server.mjs --starten`, Link nennen
 - „Ich schaue mir das später an“: Hinweis, dass `/weiter` jederzeit fortsetzt, `/sync` sichert

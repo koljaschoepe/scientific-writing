@@ -21,6 +21,12 @@
   "latex-workshop.message.error.show": false,
   "latex-workshop.message.warning.show": false,
 
+  "//ltex": "LTeX+ prüft Rechtschreibung und Grammatik nur in Markdown (deine Texte in arbeit/). LaTeX ist ausgenommen, weil latex/kapitel generiert und latex/vorlage Kit ist. Englische Arbeit: ltex.language in den Benutzereinstellungen auf en-US oder en-GB stellen. Fachbegriffe aus arbeit/begriffe.md kennt LTeX nicht automatisch: unterstrichenes Wort, Schnellkorrektur, zum Wörterbuch hinzufügen (landet in deinen Benutzereinstellungen und übersteht /update).",
+  "ltex.enabled": ["markdown"],
+  "ltex.language": "de-DE",
+  "ltex.additionalRules.motherTongue": "de-DE",
+  "ltex.checkFrequency": "save",
+
   "//browser": "localhost-Links (Dashboard) im integrierten Browser von VS Code öffnen (ab VS Code 1.109).",
   "workbench.browser.openLocalhostLinks": true,
 
@@ -35,9 +41,12 @@
     "**/node_modules": true,
     "**/__pycache__": true,
     "code/.venv": true,
-    "latex/build": true
+    "latex/build": true,
+    ".lokal": true
   },
   "search.exclude": {
+    ".lokal": true,
+    "**/*.bak": true,
     "latex/build": true,
     "latex/kapitel": true,
     "quellen/pdfs": true,

@@ -1,0 +1,17 @@
+# Zeilenenden einheitlich LF im Repo, damit Windows und macOS dieselben Dateien sehen
+* text=auto eol=lf
+
+# Binärdateien nie umwandeln
+*.pdf binary
+*.docx binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.zip binary
+
+# PowerShell-Skripte brauchen unter Windows CRLF
+*.ps1 text eol=crlf

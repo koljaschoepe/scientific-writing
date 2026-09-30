@@ -52,7 +52,7 @@ VS Code stellt beim ersten Öffnen ein paar Fragen. So beantwortest du sie:
 | --- | --- | --- |
 | „Vertrauen Sie den Autoren der Dateien in diesem Ordner?“ | **Ja, ich vertraue den Autoren** | Sonst sind Erweiterungen und das Dashboard gesperrt |
 | „Dieser Ordner enthält automatische Aufgaben … zulassen?“ | **Zulassen** | Startet dein Dashboard bei jedem Öffnen |
-| „Empfohlene Erweiterungen installieren?“ | **Installieren** | Deutsch, Claude, LaTeX, PDF-Ansicht |
+| „Empfohlene Erweiterungen installieren?“ | **Installieren** | Deutsch, Claude, LaTeX, PDF-Ansicht, Rechtschreibprüfung (LTeX+), Tabellenansicht für Messdaten (Data Wrangler) |
 | Sprache auf Deutsch umstellen, neu starten? | **Ja** | |
 
 ## Schritt 3: Claude anmelden

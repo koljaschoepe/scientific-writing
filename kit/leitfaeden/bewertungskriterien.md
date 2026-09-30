@@ -1,8 +1,10 @@
 # Leitfaden: Bewertungskriterien
 
 > Wann brauchst du das? In `/pruefen` (Argumentationsprüfer), vor dem Exposé und vor der
-> Abgabe. Maßstab für Notenschätzungen. Gilt, bis die Person die Kriterien ihres
-> Lehrstuhls hinterlegt (dann `arbeit/betreuung/bewertung.md` bevorzugen).
+> Abgabe. Maßstab für Notenschätzungen. Gilt, bis die Kriterien des Lehrstuhls bekannt sind.
+> Legt die Person einen Bewertungsbogen oder ein Merkblatt vor (Eingang, Betreuungsgespräch),
+> überträgt Claude die Kriterien mit Gewichtung nach `arbeit/betreuung/bewertung.md`. Gibt es
+> diese Datei, hat sie Vorrang.
 
 Aus der Erfahrung der Bachelorarbeit, auf der dieses Kit aufbaut: Eine Notenschätzung pro
 Kapitel mit konkreter Begründung hat mehr verbessert als jede Checkliste mit Häkchen.

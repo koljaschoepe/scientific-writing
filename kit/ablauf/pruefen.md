@@ -9,7 +9,7 @@
 | Schritt | erledigt, wenn |
 | --- | --- |
 | 1 Gesamtlektüre | `arbeit/pruefung/gesamt.md` existiert |
-| 2 Umfang | Arbeit im Rahmen ±5 % oder Kürzungsplan umgesetzt |
+| 2 Umfang | Arbeit im Rahmen ±10 % oder Kürzungsplan umgesetzt |
 | 3 Zitattreue gesamt | alle Kapitel mit Zitatprüfung ohne hohe Funde |
 | 4 Korrekturen | alle Kapitel `final` |
 | 5 Final-Gate | `arbeit/pruefung/final.md` ohne Rot |

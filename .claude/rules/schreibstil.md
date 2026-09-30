@@ -24,4 +24,4 @@ Gilt für alles, was in die Arbeit eingeht. Sprache aus `arbeit/projekt.json →
   aus `daten/` und `code/` belegen sich selbst über Abbildung, Tabelle oder Methodenteil.
 - Übergänge über Konzeptnamen. Keine Ankündigung des nächsten Kapitels, keine Zusammenfassung
   des vorigen. Querverweise auf Abbildungen, Tabellen und Gleichungen (`\cref{fig:x}`) sind erlaubt.
-- Seitenbudget aus dem Kapitelplan einhalten: Abweichung über 10 Prozent melden.
+- Umfang aus dem Kapitelplan einhalten (±10 %), Abweichung melden.

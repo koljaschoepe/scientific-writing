@@ -1,79 +1,76 @@
 ---
 name: hilfe
-description: Hilfe in jeder Lage. Zeigt, wo die Arbeit steht und was als Nächstes sinnvoll ist, prüft das System und repariert, was geht, beantwortet Fragen zur Bedienung.
-argument-hint: "[frage]"
-disable-model-invocation: true
+description: Lage, nächster Schritt, Systemcheck mit Reparatur, Bedienung und Rückgängigmachen erklären.
+when_to_use: Person weiß nicht weiter, Fehlermeldung, Dashboard lädt nicht, JSON kaputt, etwas rückgängig machen.
+argument-hint: "[frage oder problem]"
+gruppe: technik
 ---
 
 # /hilfe: Wo bin ich, was jetzt, was ist kaputt?
 
-Wann brauchst du das? Immer wenn die Person nicht weiterweiß, etwas nicht funktioniert oder
-sie eine Frage zur Bedienung hat. Sprich einfach, ohne Fachbegriffe, und erkläre, was du tust.
+**Wichtig:** Einfach sprechen, ohne Fachbegriffe. Ohne Rückfrage nur reparieren, was nichts
+installiert und nichts nach außen schickt. Nie eine beschädigte Datei mit einer Vorlage
+überschreiben. Endausgabe laut `AGENTS.md`.
 
-Argument: `$ARGUMENTS` (optional, eine Frage oder Problembeschreibung)
+Argument: `$ARGUMENTS`
 
-## 1. Lage ermitteln (immer, still)
+## 1. Lage (still, parallel)
 
-Parallel ausführen:
-- `node kit/werkzeuge/stand.mjs` (Phase, nächster Schritt, Tage bis Abgabe, Kapitel, Quellen)
+- `node kit/werkzeuge/stand.mjs` (Phase, nächster Schritt, Frist)
 - `node kit/werkzeuge/check.mjs --json` (Systemcheck)
 
-## 2. Antworten je nach Anlass
+## 2. Antworten
 
-**Mit Frage oder Problem (`$ARGUMENTS` nicht leer):**
-1. `docs/probleme.md` und, falls passend, `docs/befehle.md` lesen.
-2. Passt ein Punkt aus dem Systemcheck (`ok: false`) zum Problem, zuerst den beheben.
-3. Die Frage direkt beantworten, in höchstens fünf Sätzen, mit dem konkreten nächsten Schritt.
+**Mit Frage:** passenden Abschnitt in `docs/probleme.md` bzw. `docs/befehle.md` lesen. Passt
+ein Check-Punkt mit `ok: false`, zuerst den beheben. Antwort in höchstens fünf Sätzen mit dem
+konkreten nächsten Schritt. Reine Frage: kein Abschluss-Interview nötig.
 
-**Ohne Frage:** Eine kurze Lagekarte ausgeben:
+**Ohne Frage:** Lagekarte:
 
 ```
-Du bist hier:   Phase 3 von 8, Recherche
+Du bist hier:     Phase 3 von 8, Recherche
 Nächster Schritt: 12 Vorschläge im Dashboard sichten (Reiter Quellen)
-Abgabe:         in 143 Tagen (28.02.2027), Tagesziel 310 Wörter
-System:         alles in Ordnung  |  2 Punkte brauchen Aufmerksamkeit
+Abgabe:           in 143 Tagen (2027-02-28), Tagesziel 310 Wörter
+System:           alles in Ordnung
 ```
 
-Dann die für diese Phase passenden Befehle (höchstens vier), je mit einem Satz Nutzen:
-
-| Phase | Befehle |
-| --- | --- |
-| einrichtung | /start |
-| thema, expose, gliederung | /weiter, /recherche |
-| recherche | /recherche, /quellen, /weiter |
-| schreiben | /schreiben, /quellen, /pdf, /weiter |
-| pruefen | /pruefen, /schreiben, /pdf |
-| abgabe | /pdf, /pruefen alles, /sync |
-
-Immer gültig: /sync (sichern), /dashboard (Überblick), /hilfe.
+Dazu höchstens vier passende Befehle je mit einem Satz Nutzen (einrichtung: /start;
+thema bis gliederung: /weiter, /recherche; schreiben: /schreiben, /quellen, /pdf;
+pruefen: /pruefen, /pdf; abgabe: /pdf, /pruefen final, /sync).
 
 ## 3. Reparieren
 
-Für jeden Punkt mit `ok: false` und `reparatur`:
-- **Ohne Rückfrage** reparieren, was nichts installiert und nichts nach außen schickt:
-  Dashboard starten (`/dashboard`), fehlende Nutzerdateien anlegen
-  (`node kit/werkzeuge/zustand.mjs init`).
-- **Mit Interview** alles, was installiert oder sich anmeldet (winget, brew, `gh auth login`,
-  `git config --global`). Bis zu vier Punkte in einem Interview-Aufruf, je Frage
-  „<Punkt> fehlt. Soll ich das jetzt einrichten?“ mit „Ja, jetzt (Empfohlen)“, „Später“ und
-  einer Beschreibung, wofür es gebraucht wird. Für Namen und E-Mail Beispielwerte als Option
-  anbieten, die Person tippt den echten Wert ins Freitextfeld.
-- Nach jeder Installation den Check erneut laufen lassen. Unter Windows sind neue Programme
-  oft erst nach Neustart von VS Code sichtbar: dann genau das sagen.
-- Nicht reparierbar (zum Beispiel kein Internet, kein Speicherplatz): in einem Satz erklären,
-  was die Person selbst tun kann.
+- Ohne Rückfrage: `node kit/werkzeuge/check.mjs --reparieren` (stellt beschädigte JSON-Dateien
+  aus einer gültigen `.bak` wieder her), `node kit/werkzeuge/zustand.mjs init` (legt fehlende
+  Nutzerdateien an), Dashboard starten. Ergebnis in einem Satz.
+- Bleibt eine JSON-Datei kaputt (Dashboard meldet „beschädigt“): Fehlerstelle mit `node -e`
+  finden, gezielt reparieren, bei Git-Konfliktmarken die Fassungen zusammenführen wie in
+  `/sync`. Die `.bak` daneben ist die letzte gute Fassung.
+- Mit Interview alles, was installiert oder sich anmeldet (winget, brew, `gh auth login`,
+  `git config --global`), bis zu vier Punkte je Aufruf: „<Punkt> fehlt. Jetzt einrichten?“,
+  „Ja, jetzt (Empfohlen)“, „Später“. Danach Check erneut. Windows: neue Programme oft erst
+  nach Neustart von VS Code sichtbar.
+- Projekt in OneDrive, iCloud oder Dropbox: Risiko erklären, beim Umzug helfen, nie selbst
+  verschieben.
 
-Hinweis „Speicherort“: Liegt das Projekt in OneDrive, iCloud oder Dropbox, das Risiko erklären
-(doppelte Dateien, Sperren, Konflikte mit /sync) und anbieten, beim Umzug zu helfen. Nie selbst
-verschieben.
+## 4. Rückgängig machen (erklären, wenn gefragt)
 
-## 4. Wenn gar nichts hilft
+- **Im Dashboard:** Jede Aktion zeigt kurz „Rückgängig“ unten im Hinweis, mehrere nacheinander
+  gehen auch.
+- **Claudes Änderungen:** in VS Code der Rewind-Knopf am Prompt, in der Konsole zweimal Esc.
+  Das setzt Gespräch und von Claude direkt bearbeitete Dateien zurück.
+- **Grenze:** Rewind wirkt nicht auf Dateien, die Subagents (z. B. der Autor beim Kapitelschreiben)
+  oder Befehle im Terminal geschrieben haben. Dafür vorher `/sync`, dann ist jeder gesicherte
+  Stand auf GitHub zurückholbar. Der Autor legt zusätzlich Kopien in `arbeit/kapitel/.versionen/` an.
+- **Kaputte JSON-Datei:** `.bak` daneben, siehe Reparieren.
 
-Einen kurzen Problembericht zusammenstellen, den die Person weitergeben kann: was sie wollte,
-was passiert ist (Fehlermeldung wörtlich), Betriebssystem, Ergebnis von `check.mjs`,
-Kit-Version aus `kit/VERSION`. Keine Zugangsdaten, keine Inhalte der Arbeit.
+## 5. Wenn nichts hilft
 
-## 5. Abschluss (immer)
+Problembericht zum Weitergeben: was sie wollte, was passiert ist (Fehlermeldung wörtlich),
+Betriebssystem, Ergebnis von `check.mjs`, Version aus `kit/VERSION`. Keine Zugangsdaten,
+keine Inhalte der Arbeit.
 
-Interview mit einer Frage „Wie machen wir weiter?“ und passenden Optionen, zum Beispiel
-„Nächster Schritt: <aus stand> (Empfohlen)“, „Dashboard öffnen“, „Andere Frage“.
+## 6. Abschluss
+
+Nach Reparaturen oder der Lagekarte: Interview „Wie machen wir weiter?“, z. B.
+„<nächster Schritt> (Empfohlen)“, „Dashboard öffnen“, „Andere Frage“.

@@ -5,6 +5,11 @@
 dashboard.html
 latex/build/
 latex/kapitel/
+Vorschau.pdf
+Arbeit-neu.docx
+
+# Gerätelokale Laufzeitdaten (Dashboard-Journal, Aktivität, Schnappschüsse, letzter Sync)
+.lokal/
 
 # Betriebssystem
 .DS_Store
@@ -29,6 +34,7 @@ install/*.log
 # Temporäre Dateien
 *.tmp
 *.bak
+*.kaputt-*
 .~lock.*
 
 # Bewusst NICHT ignoriert: quellen/pdfs/

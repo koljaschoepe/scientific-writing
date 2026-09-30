@@ -21,7 +21,7 @@ Kernbegriffe in der Gliederungsphase nicht festgelegt waren, und die erste Fassu
 | --- | --- |
 | 1 Modell | gliederung.md hat ein gewähltes Modell (Kommentar oben) |
 | 2 Entwurf | alle Unterkapitel mit Kernaussage |
-| 3 Budget | Summe der Budgets = `woerter_ziel` ±5 % |
+| 3 Budget | Summe der Budgets = `woerter_ziel` ±10 % |
 | 4 Begriffe | Kernbegriffe mit „fest“ in begriffe.md |
 | 5 Zustand | `kapitel[]` in zustand.json gefüllt |
 | 6 Freigabe | Meilenstein `gliederung` erledigt |

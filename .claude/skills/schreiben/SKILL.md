@@ -1,96 +1,83 @@
 ---
 name: schreiben
-description: Plant und schreibt ein Unterkapitel oder überarbeitet einen Text der Person, danach Freigabe per Interview.
-argument-hint: "[kapitelnummer, z. B. 2.1]"
-disable-model-invocation: true
+description: Plant und schreibt ein Unterkapitel oder überarbeitet einen Text der Person, mit Freigabe.
+when_to_use: Kapitel schreiben, fortsetzen, umschreiben, kürzen oder eigenen Text verbessern. Nicht für Tippfehler.
+argument-hint: "[kapitelnummer, z. B. 2.1, oder datei]"
+gruppe: arbeit
 ---
 
 # /schreiben: Kapitel planen, schreiben, überarbeiten
 
-## Wann
+**Wichtig:** Schreibmodus aus `arbeit/projekt.json → schreibmodus` beachten (`coach`: kein
+Fließtext). Nur Quellen aus der bib, nie erfinden, fehlend `[BELEG FEHLT]`. Umfang ±10 %.
+Freigabe setzt `geprueft`, `final` gibt es erst nach `/pruefen`. Zustand nur über
+`zustand.mjs`. Endausgabe laut `AGENTS.md`.
 
-- In der Phase Schreiben (über `/weiter`) oder gezielt: `/schreiben 3.2`.
-- Wenn die Person selbst etwas geschrieben hat und es gemeinsam verbessern will.
-- Auch für Exposé-Abschnitte, Abstract und Zusammenfassung (dann Datei statt Kapitelnummer nennen).
+Argument: `$ARGUMENTS`
 
 ## Kontext laden
 
-- `arbeit/projekt.json` (`schreibmodus`, Sprache, Fachprofil), `arbeit/zustand.json` (Kapitel,
-  Status, Budget), `arbeit/gliederung/gliederung.md`, `arbeit/begriffe.md`, `arbeit/stil.md`
-- Vorbedingung: Gliederung freigegeben (Meilenstein `gliederung` erledigt). Sonst per Interview
-  auf `/weiter` verweisen oder bewusst vorgreifen lassen.
+- `arbeit/projekt.json`, `arbeit/zustand.json` (Kapitel, Status, `woerter_ziel`),
+  `arbeit/gliederung/gliederung.md`
+- Vorbedingung: Meilenstein `gliederung` erledigt. Sonst per Interview auf `/weiter` verweisen
+  oder bewusst vorgreifen lassen.
 
 ## Kapitel wählen
 
-Ohne Argument: das erste Unterkapitel mit Status `offen` oder `geplant` in Gliederungsreihenfolge.
-Per Interview bestätigen, dabei Alternativen anbieten:
-„Welches Kapitel jetzt?“ header „Kapitel“
-- „<nr> <Titel> (Empfohlen)“: nächstes in der Reihenfolge
-- „Ergebnisse zuerst“: in der Naturwissenschaft oft sinnvoll, wenn Daten schon da sind
-- „Einen eigenen Text überarbeiten“
-- „Ein anderes“ (Freitext)
+Ohne Argument: erstes Unterkapitel mit Status `offen` oder `geplant` in empfohlener Reihenfolge
+(`kit/ablauf/schreiben.md`). Interview „Welches Kapitel jetzt?“ header „Kapitel“:
+„<nr> <Titel> (Empfohlen)“, „Ergebnisse zuerst“ (wenn Daten da sind), „Eigenen Text
+überarbeiten“, „Ein anderes“.
 
-## Ablauf nach Schreibmodus
+## claude-schreibt (Standard)
 
-### claude-schreibt (Standard)
+1. **Planen:** Subagent `kapitel-planer`. Plan in 5 bis 8 Zeilen zeigen, Lücken nennen.
+   Interview „Passt der Plan?“ header „Plan“: „Ja, schreiben (Empfohlen)“, „Anpassen“,
+   „Erst Lücken schließen“ (dann recherche-Skill mit `<nr>` oder Daten klären).
+   `node kit/werkzeuge/zustand.mjs kapitel <nr> geplant`
+2. **Schreiben:** Subagent `autor`, Modus `neu`. Methoden und Ergebnisse: Tagebuch, Daten,
+   Abbildungen einbeziehen. Fehlende Abbildung aus Daten: anbieten, sie mit `uv run` zu erzeugen.
+3. **Selbstkontrolle:** Umfang, `[BELEG FEHLT]`, harte Schwellen stichprobenartig.
+4. `node kit/werkzeuge/zustand.mjs kapitel <nr> entwurf`
 
-1. **Planen:** Subagent `kapitel-planer` für das Kapitel. Den Plan in 5 bis 8 Zeilen zeigen
-   (Absätze, Belege, Abbildungen, Budget) und Lücken nennen.
-   Interview „Passt der Plan?“ header „Plan“: „Ja, schreiben (Empfohlen)“, „Anpassen“
-   (Freitext), „Erst Lücken schließen“ (dann `/recherche <nr>` oder Daten klären).
-   Status: `node kit/werkzeuge/zustand.mjs kapitel <nr> geplant`.
-2. **Schreiben:** Subagent `autor`, Modus `neu`. Methoden- und Ergebniskapitel: Tagebuch,
-   Daten, Abbildungen einbeziehen. Fehlt eine Abbildung, die per Skript entstehen kann,
-   anbieten, sie mit `uv run` in `code/` zu erzeugen (Regel `code.md`).
-3. **Selbstkontrolle** vor dem Zeigen: Budget, `[BELEG FEHLT]`, harte Schwellen stichprobenartig.
-4. Status `entwurf`.
+## gemeinsam
 
-### gemeinsam
+Die Person schreibt, Claude überarbeitet: Subagent `autor`, Modus `ueberarbeiten`. Danach je
+geändertem Absatz eine Zeile Erklärung („Absatz 2: Satz geteilt, Beleg ergänzt“).
 
-Die Person schreibt, Claude überarbeitet. Datei der Person lesen (oder Text aus dem Chat
-übernehmen und an der richtigen Stelle speichern). Subagent `autor` im Modus `ueberarbeiten`.
-Änderungen danach absatzweise in Klartext erklären („Absatz 2: Satz geteilt, Beleg ergänzt,
-‚Methode‘ statt ‚Verfahren‘ laut Begriffsliste“).
+## coach
 
-### coach
-
-Claude schreibt keinen Fließtext der Arbeit. Stattdessen: Plan, Stichpunkte, Leitfragen je
-Absatz, Feedback auf den Text der Person mit konkreten Verbesserungsvorschlägen, die sie
-selbst umsetzt.
+Kein Fließtext der Arbeit. Plan, Stichpunkte, Leitfragen je Absatz, konkretes Feedback auf
+den Text der Person.
 
 ## Überarbeiten auf Wunsch
 
-Auch im Modus `claude-schreibt` kann die Person eigene Absätze einfügen oder Texte ändern.
-Beim Überarbeiten ihre Formulierungen und Argumente respektieren. Vorher Version sichern
-(Agent `autor` macht das).
+Formulierungen und Argumente der Person respektieren. Der `autor` sichert vorher eine Kopie
+nach `arbeit/kapitel/.versionen/`. Hinweis: Rewind stellt vom `autor` geschriebene Dateien
+nicht wieder her, die Kopie und `/sync` schon.
 
-## Freigabe (Pflicht nach jedem Kapitel)
+## Freigabe (nach jedem Kapitel)
 
-Kurze Zusammenfassung: Wörter Ist/Soll, Belege, offene Stellen, die eine kritische Anmerkung
-(stärkste Schwachstelle). Dann Interview:
-„Wie findest du <nr>?“ header „Freigabe“
-- „Freigeben (Empfohlen)“: `node kit/werkzeuge/zustand.mjs kapitel <nr> final` – oder
-  `geprueft`, wenn `/pruefen` für das Kapitel schon lief
-- „Überarbeiten“: was genau (Freitext) → Autor im Modus ueberarbeiten, dann erneut Freigabe
+Endausgabe laut `AGENTS.md`: Satz mit Wörtern Ist/Soll, Stichpunkte mit offenen Stellen und
+der stärksten Schwachstelle, `Geändert:` mit Link zur Kapiteldatei. Dann Interview
+„Wie findest du <nr>?“ header „Freigabe“:
+- „Freigeben (Empfohlen)“: `node kit/werkzeuge/zustand.mjs kapitel <nr> geprueft`
+- „Überarbeiten“ (Freitext): `autor` Modus `ueberarbeiten`, dann erneut Freigabe
 - „Gemeinsam Absatz für Absatz“: je Absatz ein Interview (passt, ändern, streichen)
 - „Später“: bleibt `entwurf`
 
-Hinweis: Freigabe ist auch im Dashboard (Reiter Kapitel) möglich.
+Die Person kann auch im Dashboard (Kapitel lesen) Absätze direkt korrigieren oder „an Claude“
+schicken. Das Journal meldet das vor ihrem nächsten Prompt.
 
 ## Nach dem Schreiben
 
-- `arbeit/begriffe.md` um neue Begriffe ergänzen (Agent meldet sie).
-- `arbeit/hilfsmittel.md`: Zeile mit Datum, „Textentwurf“ bzw. „Überarbeitung“, Kapitel.
-- `arbeit/tagebuch.md`: Kapitel, Entscheidungen.
+- Neue Begriffe (meldet der `autor`) in `arbeit/begriffe.md`.
+- `arbeit/hilfsmittel.md`: Datum, „Textentwurf“ bzw. „Überarbeitung“, Kapitel.
+- `arbeit/tagebuch.md`: Entscheidungen.
 - `node kit/werkzeuge/zustand.mjs verlauf "Kapitel <nr> <entwurf|überarbeitet|freigegeben>"`
-- `node kit/werkzeuge/zustand.mjs pruefe-abzeichen`
-- Wenn in diesem Hauptkapitel alle Unterkapitel mindestens `entwurf` sind: `/pruefen <hauptkapitel>`
-  als nächsten Schritt empfehlen.
+- Alle Unterkapitel eines Hauptkapitels mindestens `entwurf`: `/pruefen <hauptkapitel>` empfehlen.
 
 ## Abschluss-Interview
 
-„Wie weiter?“ header „Weiter“
-- „Nächstes Kapitel <nr> (Empfohlen)“
-- „Dieses Kapitel prüfen (/pruefen <nr>)“
-- „Entwurfs-PDF ansehen (/pdf entwurf)“
-- „Pause und sichern“
+„Wie weiter?“ header „Weiter“: „Nächstes Kapitel <nr> (Empfohlen)“, „Dieses Kapitel prüfen“,
+„Entwurfs-PDF ansehen“, „Pause und sichern“.

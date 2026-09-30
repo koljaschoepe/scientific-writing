@@ -28,8 +28,11 @@ gefunden  ->  Vorschlag im Dashboard  ->  du entscheidest  ->  ausgewertet  ->  
 - **PDF hast du schon:** im Dashboard hochladen oder in `quellen/eingang/` legen, dann
   `/quellen`. Claude erkennt Titel, Autoren und DOI selbst.
 - **Nur eine DOI oder einen Link:** Claude einfach schicken („Nimm 10.1021/acs.jcim.9b00237 auf“).
-- **Zotero:** Sammlung als BibTeX exportieren (am besten mit Better BibTeX), Datei in
-  `quellen/eingang/` legen, `/quellen`.
+- **Zotero:** Mit dem Zusatz Better BibTeX die Sammlung automatisch direkt nach
+  `quellen/literatur.bib` exportieren lassen („Keep updated“). Oder einmalig als `.bib`
+  exportieren, in `quellen/eingang/` legen, `/quellen`.
+- **Zitat direkt aus dem PDF:** Quelle im Dashboard öffnen, Textstelle markieren, „Als Zitat“.
+  Seite und Wortlaut werden gespeichert, Claude ergänzt beim nächsten `/quellen` den Rest.
 
 ## Uni-Zugang (SLUB, Verlage)
 

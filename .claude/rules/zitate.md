@@ -1,7 +1,9 @@
 ---
 paths:
-  - "arbeit/**"
-  - "quellen/**"
+  - "arbeit/kapitel/**"
+  - "arbeit/expose/**"
+  - "quellen/zitate/**"
+  - "quellen/literatur.bib"
 ---
 
 # Zitate und Quellen
@@ -18,7 +20,7 @@ paths:
 - Keine Sekundärzitate, wenn die Primärquelle beschaffbar ist. Sonst kennzeichnen.
 - Paraphrase heißt eigene Satzstruktur. Fast wörtliche Übernahme mit indirektem Beleg ist
   ein Plagiatsrisiko.
-- Im Triage-Board `quellen/kandidaten.json` legt Claude nur Vorschläge an
-  (`status: vorschlag`). Nehmen oder verwerfen entscheidet die Person.
+- Im Triage-Board legt Claude nur Vorschläge an (`status: vorschlag`, über
+  `node kit/werkzeuge/kandidaten.mjs add`). Nehmen oder verwerfen entscheidet die Person.
 - Jede KI-Nutzung, die in die Arbeit eingeht, wird in `arbeit/hilfsmittel.md` protokolliert
   (Datum, Werkzeug, Zweck, betroffener Teil).

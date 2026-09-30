@@ -35,8 +35,35 @@ Ein anderes Programm nutzt Port 4711. In `arbeit/projekt.json` unter `dashboard.
 andere Zahl eintragen (zum Beispiel 4712), Claude sagen „Dashboard neu starten“.
 
 **Das Dashboard zeigt alte Zahlen.**
-Neu laden (F5). Die Datei `dashboard.html` ist nur eine Kopie und wird am Ende jeder
-Claude-Sitzung erneuert.
+Neu laden (F5). Die Datei `dashboard.html` ist nur eine Kopie ohne Knöpfe und wird erneuert,
+solange das Dashboard läuft.
+
+**„Datei ist beschädigt“.**
+Eine Einstellungsdatei in `arbeit/` oder `quellen/` ist nicht mehr lesbar, oft nach einem
+Konflikt beim Sichern. Das Dashboard überschreibt sie dann bewusst nicht. In Claude
+`/hilfe reparieren` eingeben. Daneben liegt immer eine Sicherung mit der Endung `.bak`.
+
+**Ich habe im Dashboard etwas falsch geklickt.**
+Unten erscheint kurz „Rückgängig“. Ist der Hinweis weg, sag Claude, was du zurückhaben willst.
+
+## Rückgängig machen
+
+**Claude hat etwas geändert, das ich nicht wollte.**
+In VS Code am Eingabefeld von Claude den Rewind-Knopf nutzen (in der Konsole zweimal Esc)
+und den Stand vor der Änderung wählen. Ausnahme: Kapitel, die ein Hilfsagent geschrieben
+hat, und Dateien aus Terminal-Befehlen holt Rewind nicht zurück. Dann hilft der zuletzt mit
+`/sync` gesicherte Stand oder die Kopie in `arbeit/kapitel/.versionen/`. Sag Claude einfach,
+was du zurückhaben willst.
+
+## Rechtschreibprüfung (LTeX+)
+
+**Fachbegriffe sind rot unterstrichen.**
+LTeX+ kennt deine Begriffe aus `arbeit/begriffe.md` nicht von selbst. Auf das Wort klicken,
+Schnellkorrektur (Glühbirne), „Zum Wörterbuch hinzufügen“. Das gilt dann für alle deine
+Projekte.
+
+**Meine Arbeit ist englisch.**
+In den VS-Code-Einstellungen „LTeX: Language“ suchen und auf `en-US` oder `en-GB` stellen.
 
 ## Browser-Zugriff (Playwright)
 

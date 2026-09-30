@@ -1,88 +1,69 @@
 ---
 name: quellen
-description: Verarbeitet Quellen-Entscheidungen aus dem Dashboard und neue Dateien im Eingang - bib-Eintrag anlegen, PDF beschaffen, Zitate extrahieren, Kapitel zuordnen.
+description: Verarbeitet genommene Quellen, Uploads, Zotero-Exporte und Dashboard-Zitate zu bib-Eintrag, PDF und Zitaten mit Seite.
+when_to_use: Nach Entscheidungen im Quellen-Board, Dateien in quellen/eingang, genannte DOI, PDF oder .bib.
 argument-hint: "[bibkey, doi oder pfad]"
-disable-model-invocation: true
+gruppe: quellen
 ---
 
 # /quellen: Quellen verarbeiten
 
-## Wann
+**Wichtig:** Nichts erfinden (Metadaten, Seiten, Zitate). `literatur.bib` und
+`kandidaten.json` nie ganz lesen, sondern `node kit/werkzeuge/bib.mjs keys|list` und
+`node kit/werkzeuge/kandidaten.mjs list --kurz|neu`. Board nur über `kandidaten.mjs set|add`.
+Nur legale PDF-Wege. Bei Claude Pro höchstens 2 Auswertungen parallel. Endausgabe laut `AGENTS.md`.
 
-- Nachdem die Person im Dashboard Quellen genommen hat.
-- Wenn Dateien in `quellen/eingang/` liegen (Upload im Dashboard oder abgelegt im Explorer).
-- Mit Argument: eine DOI, ein Pfad zu einem PDF oder ein bibkey, der neu ausgewertet werden soll.
-- Bei Zotero-Nutzung: neue Einträge aus der exportierten `.bib` übernehmen.
+Argument: `$ARGUMENTS` (DOI, PDF-Pfad oder bibkey zum Neuauswerten)
 
-## Kontext laden
+## 1. Arbeitsliste
 
-- `quellen/kandidaten.json`, `quellen/literatur.bib`, Dateiliste `quellen/eingang/`,
-  `quellen/pdfs/`, `quellen/zitate/`
-- `arbeit/projekt.json` (E-Mail, Sprache), `arbeit/gliederung/gliederung.md` bzw. `arbeit/thema/thema.md`
-- `kit/leitfaeden/recherche.md` (legale Beschaffung)
-
-## Ablauf
-
-### 1. Arbeitsliste bilden
-
-- A: Board-Einträge mit `status: genommen` und (`bibkey` leer oder `ausgewertet: false`).
+- A: `node kit/werkzeuge/kandidaten.mjs neu` (Entscheidungen seit der letzten Verarbeitung,
+  genommen und noch nicht ausgewertet).
 - B: Dateien in `quellen/eingang/`.
-- C: Zotero-Export mit Einträgen, die nicht in `literatur.bib` stehen.
+- C: Zotero: exportiert Better BibTeX direkt nach `quellen/literatur.bib`, genügt ein Abgleich
+  (`bib.mjs keys` gegen das Board). Liegt ein Export anderswo:
+  `node kit/werkzeuge/bib.mjs import <datei.bib>`.
+- D: Zitate aus dem Dashboard: neue Einträge in `quellen/zitate/<bibkey>.md` ohne
+  `paraphrase` oder `kapitel` (das Journal nennt sie). Paraphrase in Arbeitssprache,
+  Typ und Kapitel ergänzen, gegen das PDF gegenlesen, Seite prüfen.
 
-Zeige die Liste kurz. Bei mehr als 8 Quellen per Interview: „Alle jetzt verarbeiten
-(Empfohlen, etwa <n> Minuten)“, „Nur Kernquellen (Stern oder Markierung kernquelle)“,
-„Die ersten 5“. Bei Claude Pro höchstens 2 Auswertungen parallel.
+Mehr als 8 Quellen: Interview „Alle jetzt (Empfohlen, etwa <n> Minuten)“, „Nur Kernquellen
+(Stern oder Markierung kernquelle)“, „Die ersten 5“.
 
-### 2. Eingang (B) sortieren
+## 2. Eingang sortieren (B)
 
-Für jede Datei:
-- PDF: Metadaten aus der ersten Seite lesen (Titel, Autoren, DOI). DOI über Crossref prüfen.
-  Datei nach `quellen/pdfs/<bibkey>.pdf` verschieben. Board-Eintrag anlegen oder vorhandenen
-  ergänzen mit `herkunft: upload`, `status: genommen`.
-- `.bib` oder `.ris`: Einträge übernehmen, jeden als `genommen` ins Board.
-- Merkblatt, Prüfungsordnung, Vorlage der Arbeitsgruppe: nicht als Quelle behandeln, sondern
-  per Interview fragen, wofür es ist, und nach `arbeit/betreuung/` bzw. `latex/vorlage-ag/` legen.
-- Unklare Dateien: per Interview fragen.
+- PDF: Titel, Autoren, DOI von der ersten Seite, DOI über Crossref prüfen, nach
+  `quellen/pdfs/<bibkey>.pdf` verschieben, Board-Eintrag `herkunft: upload`, `status: genommen`.
+- `.bib` oder `.ris`: `bib.mjs import`, jeden Eintrag als `genommen` ins Board.
+- Merkblatt, Prüfungsordnung, Bewertungsbogen: keine Quelle. Per Interview klären, dann nach
+  `arbeit/betreuung/` (Bewertungskriterien zusätzlich nach `arbeit/betreuung/bewertung.md`
+  übertragen). Eine LaTeX-Vorlage der Arbeitsgruppe: siehe `/pdf`, Abschnitt Vorlage.
+- Unklar: fragen.
 
-### 3. Je Quelle (A, B, C)
+## 3. Je Quelle
 
-1. **bibkey** bilden: `nachnameJahrErstesWort`, klein, ohne Umlaute, z. B. `schwaller2019molecular`.
-   Kollision: Suffix a, b.
-2. **bib-Eintrag** anlegen: bevorzugt `node kit/werkzeuge/bib.mjs add <doi>` (holt Crossref-Daten).
-   Ohne DOI: Eintrag aus den Metadaten von Hand schreiben, Typ korrekt (`@article`, `@book`,
-   `@incollection`, `@online`, `@misc` für Preprints). Pflichtfelder laut Zitierstil-Leitfaden.
-   Zeitschriftenkürzel für Chemie-Stile in `shortjournal`.
-3. **PDF beschaffen**, wenn keins da ist, in dieser Reihenfolge:
-   - `open_access`-Link aus dem Board oder Unpaywall
-   - Verlagsseite mit Uni-Login per Playwright (Profil bleibt angemeldet; wenn nicht, Person
-     per Interview bitten, sich anzumelden)
-   - geht nicht: `pdf: null` lassen, im Dashboard als „PDF fehlt“ sichtbar, Person per
-     Interview fragen („Selbst besorgen und in den Eingang legen“, „Fernleihe“, „Ohne PDF
-     nur Abstract nutzen“, „Quelle verwerfen“).
-4. **Auswerten** mit Subagent `quellen-auswerter` (bibkey, PDF-Pfad, Kapitel, Notiz der Person).
-5. **Board aktualisieren:** `bibkey`, `pdf`, `ausgewertet: true`, `zitate: <anzahl>`,
-   `kapitel` ergänzen, falls die Auswertung weitere Kapitel ergibt.
+1. **bibkey:** `nachnameJahrErstesWort`, klein, ohne Umlaute (`schwaller2019molecular`),
+   Kollision mit Suffix a, b.
+2. **bib-Eintrag:** `node kit/werkzeuge/bib.mjs add <doi>`. Ohne DOI:
+   `bib.mjs add-json <datei.json>` mit korrektem Typ (`@article`, `@book`, `@incollection`,
+   `@online`, `@misc` für Preprints). Chemie-Stile: Zeitschriftenkürzel in `shortjournal`.
+3. **PDF:** Open-Access-Link aus dem Board oder Unpaywall, sonst Verlagsseite mit Uni-Login
+   per Playwright. Geht nicht: `pdf: null`, Interview („Selbst besorgen und in den Eingang
+   legen“, „Fernleihe“, „Nur Abstract nutzen“, „Quelle verwerfen“).
+4. **Auswerten:** Subagent `quellen-auswerter` mit bibkey, PDF-Pfad, Kapitel, Notiz der Person,
+   Kernquelle ja/nein, Sprache der Arbeit, Pfad der Gliederung.
+5. **Board:** `kandidaten.mjs set <id> bibkey=<k> pdf=<pfad> ausgewertet=true zitate=<n>`.
 
-`node kit/werkzeuge/bib.mjs check` am Ende: alle DOIs verifiziert, Fehler melden.
+Am Ende `node kit/werkzeuge/bib.mjs check` und `node kit/werkzeuge/kandidaten.mjs neu --quittieren`
+(merkt die Entscheidungen als verarbeitet).
+`node kit/werkzeuge/zustand.mjs verlauf "<n> Quellen ausgewertet"`, Zeile in
+`arbeit/hilfsmittel.md` („Quellenauswertung mit Claude Code“).
 
-### 4. Einordnen
+## 4. Abschluss
 
-Kurz zusammenfassen: verarbeitet, fehlende PDFs, auffällige Befunde (Widersprüche zwischen
-Quellen, Preprints, Quellen, die die Forschungsfrage infrage stellen). Challengen, wenn eine
-neue Quelle eine bisherige Annahme schwächt.
+Endausgabe laut `AGENTS.md`: Satz mit Anzahl verarbeitet und fehlenden PDFs, Stichpunkte nur
+für Auffälliges (Widerspruch zwischen Quellen, Preprint, eine Quelle schwächt eine Annahme:
+dann challengen). `Geändert:` mit den neuen Zitatedateien.
 
-## Zustand
-
-```
-node kit/werkzeuge/zustand.mjs verlauf "<n> Quellen ausgewertet"
-node kit/werkzeuge/zustand.mjs pruefe-abzeichen
-```
-`arbeit/hilfsmittel.md`: „Quellenauswertung (Extraktion von Zitaten) mit Claude Code“.
-
-## Abschluss-Interview
-
-„Wie weiter?“ header „Weiter“
-- nächster Schritt laut Phase (z. B. „Exposé schreiben (Empfohlen)“ oder „Kapitel <nr> planen“)
-- „Mehr recherchieren zu <Lücke>“
-- „Fehlende PDFs klären“
-- „Pause“
+Interview „Wie weiter?“ header „Weiter“: nächster Schritt laut Phase (Empfohlen),
+„Mehr recherchieren zu <Lücke>“, „Fehlende PDFs klären“, „Pause“.

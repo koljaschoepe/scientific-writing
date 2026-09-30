@@ -48,5 +48,5 @@
 
 ## Fertig, wenn
 
-Person bestätigt die Abgabe. `node kit/werkzeuge/zustand.mjs phase abgabe` ist aktiv, dann
-Meilenstein per `zustand.mjs` als erledigt markieren (Abzeichen „Abgegeben“).
+Person bestätigt die Abgabe. Dann `node kit/werkzeuge/zustand.mjs abschliessen` (alle Phasen
+erledigt, das Abzeichen „Abgegeben“ erscheint im Dashboard von selbst).

@@ -45,19 +45,19 @@
             "type": "command",
             "command": "node",
             "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/start.mjs"],
-            "timeout": 15
+            "timeout": 10
           }
         ]
       }
     ],
-    "Stop": [
+    "UserPromptSubmit": [
       {
         "hooks": [
           {
             "type": "command",
             "command": "node",
-            "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/stop.mjs"],
-            "timeout": 15
+            "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/prompt.mjs"],
+            "timeout": 5
           }
         ]
       }

@@ -1,83 +1,66 @@
 ---
 name: recherche
-description: Sucht Literatur zu einem Thema oder Kapitel (Crossref, Semantic Scholar, Bibliothek und Google Scholar per Browser, Web) und legt Vorschläge im Quellen-Board an, über die die Person im Dashboard entscheidet.
+description: Sucht Literatur zu Thema, Frage oder Kapitel und legt geprüfte Vorschläge im Quellen-Board an.
+when_to_use: Belege fehlen, [BELEG FEHLT] im Text, Frage nach Literatur oder Studien, Phase Recherche.
 argument-hint: "[thema, frage oder kapitelnummer]"
-disable-model-invocation: true
+gruppe: quellen
 ---
 
 # /recherche: Literatur finden
 
-## Wann
+**Wichtig:** Nie eine Quelle, DOI oder Jahreszahl erfinden, jede DOI gegen Crossref prüfen.
+Claude legt nur Vorschläge an, die Person entscheidet. `kandidaten.json` nie ganz lesen oder
+von Hand schreiben, sondern `node kit/werkzeuge/kandidaten.mjs`. Endausgabe laut `AGENTS.md`.
 
-- In der Phase Recherche (über `/weiter`) oder jederzeit, wenn Belege fehlen.
-- Wenn ein Kapitel `[BELEG FEHLT]`-Marken hat.
-- Mit Argument: `/recherche 2.3` sucht für Kapitel 2.3, `/recherche "yield prediction"` zu einem Begriff.
+Argument: `$ARGUMENTS` (z. B. `2.3` für Kapitel 2.3 oder `"yield prediction"`)
 
 ## Kontext laden
 
-- `arbeit/projekt.json`, `arbeit/thema/thema.md`, `arbeit/gliederung/gliederung.md` (falls vorhanden)
-- `quellen/kandidaten.json` (was schon da ist, was verworfen wurde: nicht erneut vorschlagen)
+- `arbeit/thema/thema.md`, `arbeit/gliederung/gliederung.md` (falls vorhanden)
+- Was schon da ist: `node kit/werkzeuge/kandidaten.mjs list --kurz` (auch verworfene nicht
+  erneut vorschlagen)
 - `kit/leitfaeden/recherche.md`
 
-## Ablauf
+## 1. Auftrag klären (höchstens eine Interview-Runde)
 
-### 1. Auftrag klären (Interview, eine Runde)
-
-Wenn kein eindeutiges Argument da ist:
-1. „Wofür suchen wir?“ header „Ziel“: passende Optionen aus Gliederung bzw. Thema
-   (z. B. „Stand der Forschung zu <Kernbegriff> (Empfohlen)“, „Methoden für <X>“,
-   „Belege für Kapitel <nr>“, „Gegenpositionen und Kritik“).
+Nur wenn das Argument nicht eindeutig ist und `arbeit/stil.md` („So arbeite ich“) nichts sagt:
+1. „Wofür suchen wir?“ header „Ziel“: aus Thema bzw. Gliederung, z. B. „Stand der Forschung zu
+   <Kernbegriff> (Empfohlen)“, „Methoden für <X>“, „Belege für Kapitel <nr>“, „Gegenpositionen“.
 2. „Wie breit?“ header „Umfang“: „10 bis 15 starke Treffer (Empfohlen)“, „Breiter Überblick
    (30+)“, „Nur die 5 wichtigsten“.
 3. „Wo suchen?“ header „Quellen“, multiSelect: „Fachdatenbanken per API (Empfohlen)“,
-   „Bibliothek und Verlage mit Uni-Login“, „Google Scholar“, „Allgemeine Websuche“.
-   Hinweis in der Beschreibung: Browser-Suche dauert länger.
+   „Bibliothek und Verlage mit Uni-Login“, „Google Scholar“, „Allgemeine Websuche“
+   (Browser-Suche dauert länger).
 
-Überspringe Fragen, deren Antwort aus `arbeit/stil.md` („So arbeite ich“) klar ist.
+## 2. Suchen
 
-### 2. Suchen
+- API-Suche über den Subagent `rechercheur` (Auftrag: Ziel, Kapitel, Anzahl, Zeitraum, E-Mail
+  aus `arbeit/projekt.json → autor.email`, bekannte DOIs zum Ausschließen). Bei Claude Pro
+  ein Subagent, nicht mehrere parallel.
+- Browser (Playwright), wenn gewählt, im Hauptgespräch: beim ersten Mal Anmeldeseite öffnen
+  und per Interview bitten, sich selbst anzumelden („Bin angemeldet“, „Klappt nicht“,
+  „Überspringen“). SLUB, Verlage, Scholar langsam und einzeln. Jede DOI über Crossref prüfen.
+- Websuche nur für Hintergrund, Software-Doku, graue Literatur.
 
-- API-Suche über den Subagent `rechercheur` (Auftrag: Ziel, Kapitel, Anzahl, Zeitraum,
-  E-Mail für mailto). Bei Claude Pro ein Subagent, nicht mehrere parallel.
-- Browser (Playwright), wenn gewählt, im Hauptgespräch:
-  - Beim ersten Mal: Anmeldeseite öffnen und per Interview bitten, sich selbst anzumelden
-    („Ich habe die Anmeldeseite geöffnet. Sag Bescheid, wenn du angemeldet bist.“ –
-    Optionen „Bin angemeldet“, „Klappt nicht“, „Überspringen“).
-  - SLUB-Katalog, Verlagsseiten, Google Scholar langsam und einzeln abfragen.
-  - Jeden Browser-Treffer mit DOI über Crossref prüfen.
-- Allgemeine Websuche (WebSearch) nur für Hintergrund, Datenbanken, Software-Dokumentation,
-  graue Literatur. Nicht als Ersatz für Fachliteratur.
+## 3. Ins Board
 
-### 3. Ins Board eintragen
+Kandidaten als JSON-Liste nach `kit/SPEC.md` (Triage-Board) an
+`node kit/werkzeuge/kandidaten.mjs add -` übergeben. Das Werkzeug setzt `status: vorschlag`,
+Datum und Standardfelder und überspringt Dubletten (gleiche id oder DOI).
+Suchstrings mit Datum und Trefferzahl in `arbeit/tagebuch.md`, eine Zeile in
+`arbeit/hilfsmittel.md` („Literaturrecherche mit Claude Code“).
+`node kit/werkzeuge/zustand.mjs verlauf "Recherche: <n> Vorschläge zu <Ziel>"`
 
-Für jeden Kandidaten einen Eintrag in `quellen/kandidaten.json` nach Schema in `kit/SPEC.md`
-anlegen: `status: "vorschlag"`, `stern: 0`, `notiz: ""`, `ausgewertet: false`, `zitate: 0`,
-`hinzugefuegt: <heute>`, `entschieden: null`, `bibkey: ""`. Dubletten (gleiche DOI oder
-gleicher Titel) nicht anlegen. Datei als gültiges JSON schreiben (vorher lesen, ergänzen,
-ganz schreiben).
+## 4. Abschluss
 
-Suchstrings mit Datum und Trefferzahl in `arbeit/tagebuch.md` protokollieren.
-`arbeit/hilfsmittel.md`: „Literaturrecherche mit Claude Code (APIs/Browser)“.
+Endausgabe laut `AGENTS.md`, keine Tabelle der Treffer (die stehen im Dashboard):
+- Satz: „<n> Vorschläge zu <Ziel> stehen im Dashboard unter Quellen.“
+- Stichpunkte: was die Treffer zusammen sagen, wichtigste Lücke oder Gegenposition, ob sich
+  an Thema oder Frage etwas ändern sollte.
 
-### 4. Einordnen und challengen
-
-Zeige eine kurze Tabelle der Top-5 (Titel gekürzt, Jahr, warum, Relevanz) und benenne:
-- Was die Treffer zusammen sagen (2 Sätze).
-- Die wichtigste Lücke oder Gegenposition.
-- Ob sich an Thema oder Forschungsfrage etwas ändern sollte, wenn die Literatur das nahelegt.
-
-## Zustand
-
-```
-node kit/werkzeuge/zustand.mjs verlauf "Recherche: <n> Vorschläge zu <Ziel>"
-node kit/werkzeuge/zustand.mjs pruefe-abzeichen
-```
-
-## Abschluss-Interview
-
-„Die Vorschläge stehen im Dashboard unter Quellen. Wie weiter?“ header „Weiter“
-- „Ich entscheide jetzt im Dashboard (Empfohlen)“: Hinweis, danach `/quellen` ausführen
-- „Entscheide mit mir hier im Chat“: Kandidaten in Runden zu je 4 per Interview durchgehen
-  (Optionen je Quelle: nehmen, verwerfen, später), Ergebnis ins Board schreiben
+Interview „Wie weiter?“ header „Weiter“:
+- „Ich entscheide im Dashboard (Empfohlen)“: danach `/quellen`
+- „Mit mir hier im Chat“: Runden zu je 4 Kandidaten (nehmen, verwerfen, später), Ergebnis
+  per `node kit/werkzeuge/kandidaten.mjs set <id> status=<...>`
 - „Weitersuchen zu <Lücke>“
 - „Pause“

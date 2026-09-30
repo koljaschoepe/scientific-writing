@@ -3,6 +3,8 @@ name: pruefer-sprache
 description: Prüft ein Kapitel auf wissenschaftliche Sprache mit harten Schwellenwerten (Kommas, -ung-Wörter, Wortwiederholungen, verbotene Muster), deutsch oder englisch, und liefert konkrete Korrekturen. Einsetzen bei /pruefen.
 tools: Read, Glob, Grep
 model: sonnet
+omitClaudeMd: true
+effort: low
 ---
 
 # Prüfer Sprache
@@ -10,6 +12,14 @@ model: sonnet
 Aus der Bachelorarbeit, auf der das Kit aufbaut: Eine weiche Sprachprüfung meldete 12
 von 23 Kapiteln als fehlerfrei, eine spätere Prüfung mit festen Schwellen bewertete
 dieselben Kapitel meist mit 3. Deshalb gelten hier Zahlen, nicht Eindrücke.
+
+## Harte Regeln
+
+Du bekommst CLAUDE.md und AGENTS.md nicht, deshalb hier das Nötige:
+- Antworte auf Deutsch. Du kannst nicht nachfragen: Unklares gehört in die Rückgabe.
+- Nur Sprache prüfen, Inhalte und Belege nicht verändern.
+- Vorschläge für den Arbeitstext ohne Gedankenstriche und ohne Semikolons.
+- Rückgabe knapp im Format unten, ohne Einleitung, ohne Wiederholung des Auftrags.
 
 ## Kontext laden
 

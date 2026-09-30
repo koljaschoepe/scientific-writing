@@ -73,4 +73,4 @@ Interview je Einwand: beibehalten, anpassen (mit Vorschlag), mit Betreuung klär
 Frage, Unterfragen, Ziel, Abgrenzung, Machbarkeit stehen, Challenge ist dokumentiert.
 Freigabe per Interview (siehe `/weiter`). Offene Punkte nach `arbeit/betreuung/offene-fragen.md`.
 `projekt.json → arbeit.titel` auf den Arbeitstitel setzen.
-Nächste Phase: `recherche`. Abzeichen „Forschungsfrage steht“ wird über `pruefe-abzeichen` vergeben.
+Nächste Phase: `recherche`. Das Abzeichen „Forschungsfrage steht“ ergibt sich im Dashboard von selbst.

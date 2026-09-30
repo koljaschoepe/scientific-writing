@@ -1,105 +1,77 @@
 ---
 name: pdf
-description: Baut aus den Kapiteln das PDF der Arbeit (oder einen Entwurf mit Platzhaltern, oder das Exposé) und übersetzt LaTeX-Fehler in einfache Sprache.
-argument-hint: "[entwurf | expose]"
-disable-model-invocation: true
+description: Baut PDF, Entwurf, Exposé oder Word-Datei und übersetzt LaTeX-Fehler in einfache Sprache.
+when_to_use: PDF sehen oder bauen, Word-Fassung für die Betreuung, PDF-Fehler.
+argument-hint: "[entwurf | expose | docx | check]"
+gruppe: arbeit
 ---
 
 # /pdf: Aus Markdown wird das PDF
 
-Wann brauchst du das? Wenn die Person sehen will, wie ihre Arbeit gesetzt aussieht, vor
-einem Betreuungstermin, und am Ende für die Abgabe. Die Person muss nichts über LaTeX
-wissen. Sprich nie von „kompilieren“, sondern von „PDF bauen“.
+**Wichtig:** Nie „kompilieren“ sagen, sondern „PDF bauen“. Nie rohe LaTeX-Logs zeigen. Format
+nur über `arbeit/projekt.json` ändern, nie in `latex/vorlage/` (Kit-Datei) oder
+`latex/kapitel/` (generiert). Endausgabe laut `AGENTS.md`.
 
 Argument: `$ARGUMENTS`
-- leer: fertiges PDF nach `Arbeit.pdf` (fehlende Kapitel werden gemeldet, nicht gesetzt)
-- `entwurf`: Entwurf mit Wasserzeichen und Platzhaltern für noch fehlende Unterkapitel
-- `expose`: das Exposé aus `arbeit/expose/expose.md` als eigenes PDF nach `arbeit/expose/expose.pdf`
+
+| Modus | Befehl | Ergebnis |
+| --- | --- | --- |
+| leer | `node kit/werkzeuge/pdf.mjs --json` | `Arbeit.pdf`, fehlende Kapitel gemeldet |
+| `entwurf` | `pdf.mjs entwurf --json` | Wasserzeichen, Platzhalter für fehlende Kapitel |
+| `expose` | `pdf.mjs expose --json` | `arbeit/expose/expose.pdf` |
+| `docx` | `pdf.mjs docx --json` | `Arbeit.docx`, für Betreuung, die in Word kommentiert |
+| `check` | `pdf.mjs check --json` | nur prüfen, ob Pandoc und LaTeX da sind |
+
+Im Dashboard baut „PDF aktualisieren“ den Entwurf ohne Claude und zeigt ihn im Panel.
 
 ## 1. Werkzeuge prüfen (still)
 
-```
-node kit/werkzeuge/pdf.mjs check --json
-```
+`node kit/werkzeuge/pdf.mjs check --json`. `fehlend` leer: weiter. Für `docx` genügt Pandoc.
 
-`fehlend` leer: weiter mit Schritt 2.
-
-`fehlend` enthält `pandoc` oder `latex`: Erkläre in zwei Sätzen, was fehlt und wofür
-(Pandoc wandelt die Kapitel um, LaTeX setzt das PDF). Dann AskUserQuestion:
-- „Jetzt installieren (Empfohlen)“: du startest die Installation selbst, siehe unten
-- „Anleitung zeigen“: Befehle aus `hinweise` zum selbst Ausführen, dazu `docs/` verlinken
-- „Später“: zurück, Entwurf bleibt ohne PDF
-
-Installation, je nach Betriebssystem (`process.platform` bzw. Ausgabe von `check`):
+Fehlt `pandoc` oder `latex`: in zwei Sätzen erklären (Pandoc wandelt um, LaTeX setzt), dann
+Interview „Jetzt installieren (Empfohlen)“, „Anleitung zeigen“ (Befehle aus `hinweise`),
+„Später“. Installation:
 - Windows: `winget install --id JohnMacFarlane.Pandoc -e --accept-source-agreements --accept-package-agreements`
-  und `winget install --id MiKTeX.MiKTeX -e --accept-source-agreements --accept-package-agreements`.
-  Danach MiKTeX einmal auf automatische Paketinstallation stellen:
-  `initexmf --set-config-value=[MPM]AutoInstall=1` (liegt nach der Installation unter
-  `%LOCALAPPDATA%\Programs\MiKTeX\miktex\bin\x64\`). Hinweis an die Person: Beim ersten
-  PDF lädt MiKTeX fehlende Pakete aus dem Internet, das dauert einmalig einige Minuten.
-- macOS: `brew install pandoc` und `brew install --cask mactex-no-gui` (rund 6 GB, braucht
-  das Mac-Passwort, die Person tippt es selbst im Terminal ein). Schlanke Alternative ohne
-  Passwort: `brew install tectonic` (dann zusätzlich passender Biber nötig, siehe docs).
-
-Nach der Installation muss VS Code einmal neu gestartet werden, damit die neuen Programme
-gefunden werden. Sag das klar und biete an, danach mit `/pdf` weiterzumachen.
+  und `winget install --id MiKTeX.MiKTeX -e --accept-source-agreements --accept-package-agreements`,
+  danach `initexmf --set-config-value=[MPM]AutoInstall=1` (unter
+  `%LOCALAPPDATA%\Programs\MiKTeX\miktex\bin\x64\`). Erstes PDF lädt Pakete nach, einmalig Minuten.
+- macOS: `brew install pandoc` und `brew install --cask mactex-no-gui` (rund 6 GB, Passwort
+  tippt die Person selbst). Schlanke Alternative: `brew install tectonic`.
+Danach VS Code einmal neu starten, dann `/pdf` erneut.
 
 ## 2. Bauen
 
-```
-node kit/werkzeuge/pdf.mjs <entwurf|expose> --json
-```
+Befehl laut Tabelle. Erstes Mal kann Minuten dauern: ankündigen.
+Ergebnis-JSON: `ok`, `pdf` (Pfad), `seiten`, `fehler[]` (`erklaerung`, `quelle`,
+`quelleZeile`, `meldung`), `warnungen[]`, `fehlende_kapitel[]`, `fehlende_werkzeuge[]`.
 
-Das dauert beim ersten Mal bis zu mehrere Minuten (MiKTeX lädt Pakete). Kündige das an.
+## 3. Fehler selbst reparieren
 
-Ergebnis-JSON:
-- `ok`, `pdf` (Pfad), `seiten`, `engine`
-- `fehler[]`: `erklaerung` (einfache Sprache), `quelle` + `quelleZeile` (Markdown-Datei der
-  Person), `kontext`, `meldung` (Original von LaTeX)
-- `warnungen[]`: fehlende Quellen, tote Verweise, nicht geschriebene Kapitel
-- `fehlende_kapitel[]`, `fehlende_werkzeuge[]`
+Eindeutige Fehler im Text der Person (Tippfehler in `\ce{}`, `\qty{}`, `\cref{}`, fehlendes
+`$`, falscher Bildpfad) ohne Frage beheben, neu bauen, höchstens drei Runden.
+Nicht eindeutig (Quelle fehlt in der bib, Abbildung fehlt): Interview mit konkreten Wegen
+(„Quelle über /quellen aufnehmen“, „Zitat vorerst entfernen“, „Später klären“).
+Umgebung (Paket, Schrift, Biber): ein Satz, Reparatur anbieten (MiKTeX-Update,
+`latex.schrift` leeren). Details stehen in `latex/build/main.log`.
 
-## 3. Bei Fehlern: selbst reparieren
+## 4. Abschluss
 
-Fehler im Text der Arbeit (Stelle in `arbeit/kapitel/...`) behebst du selbst, ohne zu fragen,
-wenn die Korrektur eindeutig ist: Tippfehler in `\ce{}`, `\qty{}`, `\cref{}`, fehlendes
-`$`, `&` im Fließtext, falscher Bildpfad. Danach erneut bauen. Höchstens drei Runden.
+Endausgabe laut `AGENTS.md`: „PDF fertig: Arbeit.pdf, 48 Seiten.“ Höchstens drei Warnungen
+als Stichpunkte. Seiten mehr als 10 % neben `arbeit.seiten`: ausdrücklich sagen.
+`node kit/werkzeuge/zustand.mjs verlauf "PDF gebaut (<modus>, <seiten> Seiten)"`
 
-Nicht eindeutig (Quelle fehlt in `literatur.bib`, Abbildung existiert nicht, Inhalt
-müsste sich ändern): AskUserQuestion mit den konkreten Möglichkeiten, zum Beispiel
-„Quelle über /quellen aufnehmen“, „Zitat vorerst entfernen“, „Später klären“.
+Interview: „Öffnen (Empfohlen)“ (Dashboard-Panel, oder Windows `Start-Process "Arbeit.pdf"`,
+macOS `open Arbeit.pdf`), „Weiter mit der Arbeit“, „Etwas sieht falsch aus“ (was genau?).
 
-Fehler der Umgebung (Paket fehlt, Schrift fehlt, Biber-Version): Erkläre sie in einem Satz
-und biete die Reparatur an (MiKTeX-Update, `latex.schrift` in `arbeit/projekt.json` leeren).
+## Format und Vorlage
 
-Zeig der Person nie rohe LaTeX-Logs. Die Details stehen in `latex/build/main.log` bzw.
-`latex/build-expose/expose.log`, falls sie jemand braucht.
-
-## 4. Nach Erfolg
-
-Eine Zeile: „PDF fertig: Arbeit.pdf, 48 Seiten.“ Dazu höchstens drei Hinweise aus
-`warnungen` in einfacher Sprache. Seitenzahl gegen `arbeit/projekt.json → arbeit.seiten`
-halten: mehr als 10 % drüber oder drunter ausdrücklich sagen.
-
-Protokoll:
-- `node kit/werkzeuge/zustand.mjs verlauf "PDF gebaut (<modus>, <seiten> Seiten)"`
-
-Dann AskUserQuestion:
-- „PDF öffnen (Empfohlen)“: Windows `Start-Process "Arbeit.pdf"` (PowerShell), macOS
-  `open Arbeit.pdf`; beim Exposé `arbeit/expose/expose.pdf`. (Bauen und direkt öffnen in
-  einem Schritt: `node kit/werkzeuge/pdf.mjs --oeffnen`.)
-- „Weiter mit der Arbeit“: weiter wie `/weiter`
-- „Etwas sieht falsch aus“: Rückfrage, was genau (Deckblatt, Abstände, Zitate, Abbildung),
-  dann gezielt beheben
-
-## Was du anpassen darfst und was nicht
-
-- Angaben auf Deckblatt, Ränder, Schrift, Zeilenabstand, Zitierstil, Verzeichnisse:
-  ausschließlich in `arbeit/projekt.json` (Abschnitt `latex`, `zitation`). Nie in
-  `latex/vorlage/`, das ist Herstellerzone und wird von `/update` überschrieben.
-- Eigene LaTeX-Ergänzungen (Pakete, Makros): `latex/eigene-praeambel.tex` anlegen.
-- Vorgeschriebener Wortlaut der Selbstständigkeitserklärung: `latex/eigene-erklaerung.tex`.
-- Logo: `abbildungen/logo.png` (oder .pdf/.jpg) ablegen, wird automatisch verwendet.
-- TU-Dresden-Klasse: `latex.vorlage = "tudscr"`. Stand 2026-09-30 setzt tudscr das alte
-  Corporate Design um, vor der Abgabe mit dem Lehrstuhl klären.
-- Formatierungsregeln für Formeln, Einheiten, Chemie: `kit/leitfaeden/naturwissenschaft/formeln-einheiten-chemie.md`.
+- Deckblatt, Ränder, Schrift, Zeilenabstand, Zitierstil, Verzeichnisse: nur `arbeit/projekt.json`
+  (`latex`, `zitation`).
+- Eigene Pakete oder Makros: `latex/eigene-praeambel.tex`. Wortlaut der Erklärung:
+  `latex/eigene-erklaerung.tex`. Logo: `abbildungen/logo.png` (oder .pdf, .jpg).
+- `latex.vorlage`: `koma` (Standard) oder `tudscr` (TU Dresden, Stand 2026-09-30 altes
+  Corporate Design, mit dem Lehrstuhl klären). Eine eigene LaTeX-Vorlage der Arbeitsgruppe
+  unterstützt `pdf.mjs` nicht direkt. Auf Wunsch überträgt Claude deren Vorgaben in
+  `projekt.json` und `latex/eigene-praeambel.tex` oder baut eine eigene Vorlage unter
+  `latex/vorlage-eigen/` (dann nur von Hand baubar, vorher per Interview klären).
+- Formeln, Einheiten, Chemie: `kit/leitfaeden/naturwissenschaft/formeln-einheiten-chemie.md`.

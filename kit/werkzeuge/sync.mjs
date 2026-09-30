@@ -15,11 +15,14 @@
 // Exit-Codes:
 //   0 synchron   1 Fehler   3 Konflikt   4 kein Repo oder kein GitHub-Ziel
 //   5 Anmeldung fehlt   6 halbfertiges Zusammenführen liegt vor   7 zu große Dateien
+//   8 Projektordner liegt in einem fremden Git-Repo (Eltern-Repo), nichts wurde angefasst
+//   9 lokale Änderungen würden überschrieben (vorher gesichert, nichts verloren)
 
 import { spawnSync } from 'node:child_process';
-import { existsSync, readFileSync, writeFileSync, statSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync, statSync, unlinkSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { gitToplevelIstRoot, lokal, schreibeJson } from './lib.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const argv = process.argv.slice(2);
@@ -49,14 +52,40 @@ function jetzt() {
   return { iso: d.toISOString(), lesbar: `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}` };
 }
 
-// Letzter erfolgreicher Sync wird je Gerät in .git/ vermerkt, nicht in arbeit/zustand.json.
+// Letzter erfolgreicher Sync wird je Gerät in .lokal/sync.json vermerkt (gitignored), nicht in arbeit/zustand.json.
 // Grund: Ein Zeitstempel in einer synchronisierten Datei erzeugt bei zwei Geräten bei jedem
-// Sync einen Konflikt. Lesen über kit/werkzeuge/git-lage.mjs.
+// Sync einen Konflikt. Die alte Datei .git/scientific-writing-sync wird dabei aufgeräumt.
+// Lesen über kit/werkzeuge/git-lage.mjs.
 function syncVermerken(iso) {
   try {
+    schreibeJson(lokal(ROOT, 'sync.json'), { schema: 1, zeit: iso });
     const gitDir = git(['rev-parse', '--absolute-git-dir']).out;
-    writeFileSync(join(gitDir, 'scientific-writing-sync'), iso + '\n', 'utf8');
+    if (gitDir) { try { unlinkSync(join(gitDir, 'scientific-writing-sync')); } catch { /* gab es nicht */ } }
   } catch { /* nur Komfort */ }
+}
+
+function lokalSichern(nachricht) {
+  const geaendert = geaenderteDateien();
+  if (!geaendert.length) return { ok: true, neu: false };
+  git(['add', '-A']);
+  const c = git(['commit', '-m', nachricht || `Sync ${jetzt().lesbar}: ${zusammenfassung(geaendert)}`]);
+  if (!c.ok) return { ok: false, err: c.err };
+  return { ok: true, neu: true };
+}
+
+function ueberschreibFehler(text) {
+  return /local changes to the following files would be overwritten|untracked working tree files would be overwritten|Your local changes would be overwritten|Please commit your changes or stash them/i.test(text);
+}
+
+function ueberschreibDateien(text) {
+  const z = String(text).split(/\r?\n/);
+  const aus = [];
+  let an = false;
+  for (const zeile of z) {
+    if (/would be overwritten/i.test(zeile)) { an = true; continue; }
+    if (an) { if (/^\s+\S/.test(zeile)) aus.push(zeile.trim()); else if (aus.length) break; }
+  }
+  return aus;
 }
 
 function zusammenfassung(pfade) {
@@ -123,6 +152,22 @@ if (!git(['rev-parse', '--is-inside-work-tree']).ok) {
   });
 }
 
+// Nie ein Eltern-Repo sichern: der Projektordner selbst muss die Wurzel des Repos sein.
+if (!gitToplevelIstRoot(ROOT)) {
+  ende(8, {
+    status: 'fremdes-repo', wurzel: git(['rev-parse', '--show-toplevel']).out,
+    meldung: 'Dieser Projektordner liegt innerhalb eines anderen Git-Repos. /sync würde das falsche Repo sichern und bricht deshalb ab.',
+    hinweis: 'Lösung: im Projektordner ein eigenes Repo anlegen (git init, dann gh repo create --private --source . --push) oder das Projekt aus dem fremden Repo herausverschieben.',
+  });
+}
+
+// Gerätelokale Laufzeitdaten (.lokal/) gehören nie ins Repo, auch in Projekten von vor v2.1.
+if (!argv.includes('--status')) try {
+  const gi = join(ROOT, '.gitignore');
+  const alt = existsSync(gi) ? readFileSync(gi, 'utf8') : '';
+  if (!/^\/?\.lokal\/?\s*$/m.test(alt)) writeFileSync(gi, alt.replace(/\s*$/, '\n') + '\n# Gerätelokale Laufzeitdaten (Dashboard, Aktivität, letzter Sync)\n.lokal/\n', 'utf8');
+} catch { /* nicht kritisch */ }
+
 const zweig = git(['rev-parse', '--abbrev-ref', 'HEAD']).out || 'main';
 const remote = git(['remote', 'get-url', 'origin']);
 const offen = laufendesZusammenfuehren();
@@ -180,10 +225,21 @@ if (argv.includes('--merge')) {
   if (offen === 'merge') {
     ende(3, { status: 'konflikt', meldung: 'Zusammenführen läuft bereits. Offene Dateien:', dateien: konfliktDateien() });
   }
+  // Vorher lokale Änderungen sichern, sonst verweigert git das Zusammenführen.
+  const vorher = lokalSichern(`Sync ${jetzt().lesbar}: vor dem Zusammenführen gesichert`);
+  if (!vorher.ok) {
+    ende(1, { status: 'fehler', meldung: 'Deine lokalen Änderungen konnten vor dem Zusammenführen nicht gesichert werden. Nichts wurde zusammengeführt.', hinweis: vorher.err });
+  }
   git(['fetch', '--quiet', 'origin']);
   const m = git(['merge', '--no-edit', `origin/${zweig}`]);
   if (m.ok) {
     // ohne Konflikt zusammengeführt, weiter zum Push
+  } else if (ueberschreibFehler(m.err + '\n' + m.out)) {
+    ende(9, {
+      status: 'ueberschreiben', zweig, dateien: ueberschreibDateien(m.err + '\n' + m.out),
+      meldung: 'Zusammenführen abgebrochen: Diese Dateien sind hier nicht gesichert und würden durch die GitHub-Fassung ersetzt. Nichts wurde verändert:',
+      hinweis: 'Meist eine Datei, die git nicht sichern darf (z. B. in .gitignore) oder die ein anderes Programm gerade geöffnet hat. Datei schließen oder umbenennen, dann /sync noch einmal.',
+    });
   } else {
     const dateien = konfliktDateien();
     ende(3, {
@@ -215,9 +271,7 @@ if (!argv.includes('--merge') && !argv.includes('--abschliessen')) {
     });
   }
   if (geaendert.length) {
-    git(['add', '-A']);
-    const nachricht = `Sync ${zeit.lesbar}: ${zusammenfassung(geaendert)}`;
-    const c = git(['commit', '-m', nachricht]);
+    const c = lokalSichern(`Sync ${zeit.lesbar}: ${zusammenfassung(geaendert)}`);
     if (!c.ok) {
       const ohneName = /Please tell me who you are|user\.email|user\.name/i.test(c.err);
       ende(1, {
@@ -226,7 +280,7 @@ if (!argv.includes('--merge') && !argv.includes('--abschliessen')) {
         hinweis: ohneName ? 'Einmalig: git config --global user.name "Vorname Nachname" und git config --global user.email "adresse"' : c.err,
       });
     }
-    commitErstellt = true;
+    commitErstellt = c.neu;
   }
 
   // ---------- 2. Holen ----------
@@ -243,6 +297,14 @@ if (!argv.includes('--merge') && !argv.includes('--abschliessen')) {
   const hatRemoteZweig = git(['rev-parse', '--verify', '--quiet', `origin/${zweig}`]).ok;
   if (hatRemoteZweig) {
     const r = git(['pull', '--rebase', '--autostash', 'origin', zweig]);
+    if (!r.ok && ueberschreibFehler(r.err + '\n' + r.out)) {
+      if (laufendesZusammenfuehren() === 'rebase') git(['rebase', '--abort']);
+      ende(9, {
+        status: 'ueberschreiben', zweig, dateien: ueberschreibDateien(r.err + '\n' + r.out),
+        meldung: 'Lokal gesichert. Holen abgebrochen: Diese Dateien würden durch die GitHub-Fassung ersetzt. Nichts ist verloren:',
+        hinweis: 'Meist eine Datei, die git nicht sichern darf (z. B. in .gitignore) oder die ein anderes Programm gerade geöffnet hat. Datei schließen oder umbenennen, dann /sync noch einmal.',
+      });
+    }
     if (!r.ok) {
       const dateien = konfliktDateien();
       git(['rebase', '--abort']);

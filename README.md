@@ -74,7 +74,11 @@ Ergebnis freigibst. Das Exposé ist ein eigener Meilenstein, als PDF für deinen
 - **Echtes LaTeX.** KOMA-Script-Vorlage, BibLaTeX mit ACS, RSC, Angewandte, IEEE, APA oder
   Harvard. Du schreibst nie LaTeX, du siehst nur das PDF.
 - **Dashboard.** Fahrplan, Fristen, Tagesziel, Kapitelstand, Quellen-Board, Auftragsfeld,
-  das Claude mit einem Klick startet.
+  das Claude mit einem Klick startet. Kapitel lesen und Absätze direkt korrigieren, PDF auf
+  Knopfdruck aktualisieren und ansehen, Zitate aus dem PDF markieren, Suche mit Strg+K,
+  Rückgängig für jede Aktion, Werkzeugkasten mit allen Befehlen. Claude erfährt beim nächsten
+  Auftrag, was du dort getan hast.
+- **Word für die Betreuung.** `/pdf docx` erzeugt eine Word-Datei zum Kommentieren.
 - **Transparenz.** KI-Nutzung wird automatisch protokolliert und landet im
   Hilfsmittelverzeichnis.
 - **Backup mit /sync.** Privates GitHub-Repo, ein Befehl, Konflikte werden im Gespräch gelöst.
@@ -88,8 +92,8 @@ Ergebnis freigibst. Das Exposé ist ein eigener Meilenstein, als PDF für deinen
 | `/recherche [thema]` | Literatur suchen, Vorschläge ins Dashboard |
 | `/quellen` | genommene Quellen und Uploads auswerten |
 | `/schreiben [nr]` | Unterkapitel planen und schreiben oder überarbeiten |
-| `/pruefen [nr\|alles]` | Sprache, Zitattreue, Argumentation, Fachliches, Umfang |
-| `/pdf [entwurf]` | PDF bauen |
+| `/pruefen [nr\|alles\|final]` | Sprache, Zitattreue, Argumentation, Fachliches, Umfang |
+| `/pdf [entwurf\|expose\|docx]` | PDF, Exposé oder Word-Datei bauen |
 | `/sync` | sichern und mit GitHub abgleichen |
 | `/update` | neue Kit-Version holen, Arbeit bleibt unberührt |
 | `/hilfe [frage]` | Lage, Systemcheck, Reparatur |
@@ -104,7 +108,10 @@ Details: [docs/befehle.md](docs/befehle.md)
 | `arbeit/` | dir | Einstellungen, Zustand, Plan, Thema, Exposé, Gliederung, Kapitel, Prüfberichte |
 | `quellen/` | dir | Literatur (`literatur.bib`), Vorschläge, Zitate, PDFs, Eingang für Uploads |
 | `code/`, `daten/`, `abbildungen/` | dir | Auswertungen, Messdaten, Grafiken |
-| `kit/`, `.claude/`, `latex/vorlage/`, `docs/` | Kit | Werkzeuge, Befehle, Leitfäden, Vorlagen. Kommen per `/update` |
+| `kit/`, `.claude/`, `latex/vorlage/`, `docs/`, `AGENTS.md` | Kit | Werkzeuge, Befehle, Leitfäden, Vorlagen. Kommen per `/update` (eigene Befehle bleiben) |
+| `.lokal/` | dieser Rechner | Tagesaktivität, zuletzt geändert, Dashboard-Protokoll. Wird nicht synchronisiert |
+
+`AGENTS.md` enthält alle Regeln werkzeugneutral, `CLAUDE.md` bindet sie für Claude Code ein.
 
 ## Herkunft
 

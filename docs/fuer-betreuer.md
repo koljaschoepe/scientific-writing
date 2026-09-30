@@ -16,5 +16,8 @@ Einrichtung ab und richtet sich danach. Maßgeblich sind die Prüfungsordnung un
 verifiziert sind, speichert zu jedem Zitat Originalwortlaut und Seitenzahl und prüft die
 Zitattreue gegen das Original.
 
+**Kommentieren.** Auf Wunsch erhalten Sie die Arbeit als Word-Datei (`/pdf docx`), damit Sie
+mit den üblichen Kommentarfunktionen arbeiten können.
+
 **Nachvollziehbarkeit.** Das Projekt liegt versioniert in einem privaten Git-Repository.
 Jeder Zwischenstand ist mit Datum rekonstruierbar, auf Wunsch mit Lesezugang für Sie.

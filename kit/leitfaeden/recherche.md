@@ -66,11 +66,13 @@ per Interview fragen.
 
 ## Zotero (optional)
 
-Wenn `arbeit/projekt.json → werkzeuge.zotero` true ist:
-- Zotero 7 oder neuer mit Better BibTeX, Auto-Export der Sammlung als `.bib` mit
-  „Keep updated“ in den Projektordner (z. B. `quellen/zotero.bib`).
-- `/quellen` übernimmt neue Einträge aus dieser Datei in `literatur.bib` und das Board
-  (`herkunft: zotero`, `status: genommen`).
+Wenn `arbeit/projekt.json → werkzeuge.zotero` true ist, zwei Wege:
+- **Direkt:** Zotero 7 oder neuer mit Better BibTeX, Auto-Export der Sammlung („Keep updated“)
+  genau nach `quellen/literatur.bib`. Dann ist Zotero die Wahrheit für die Metadaten und
+  Claude trägt dort nichts von Hand ein, sondern bittet die Person, Quellen in Zotero anzulegen.
+- **Import:** Export als `.bib` irgendwohin (z. B. `quellen/eingang/`), dann
+  `node kit/werkzeuge/bib.mjs import <datei.bib>`. Übernimmt neue Einträge in `literatur.bib`,
+  `/quellen` legt sie im Board an (`herkunft: zotero`, `status: genommen`).
 - Lokale Zotero-API unter `http://localhost:23119/api/` (in Zotero unter Einstellungen,
   Erweitert aktivieren) erlaubt Lesen ohne Key.
 

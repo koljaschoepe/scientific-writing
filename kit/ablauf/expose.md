@@ -36,10 +36,9 @@
    die drei Fragen formulieren, die die Betreuung am wahrscheinlichsten stellt, und im
    Abschnitt „Offene Fragen an die Betreuung“ die Entscheidungen, die sie treffen muss.
    Kurze Sprach- und Zitatprüfung wie in `/pruefen` (nur hohe Funde).
-4. **PDF:** mit Pandoc aus Markdown, Literatur über biber, z. B.
-   `node kit/werkzeuge/pdf.mjs expose` (falls unterstützt), sonst
-   `pandoc arbeit/expose/expose.md --citeproc --bibliography quellen/literatur.bib -o arbeit/expose/expose.pdf --pdf-engine=lualatex`.
-   Gelingt es nicht, `.docx` erzeugen (`-o expose.docx`) und das sagen.
+4. **PDF:** `/pdf expose` (`node kit/werkzeuge/pdf.mjs expose --json`) schreibt
+   `arbeit/expose/expose.pdf`. Kommentiert die Betreuung lieber in Word, zusätzlich
+   `/pdf docx` anbieten.
 5. **Betreuungsgespräch vorbereiten:** `arbeit/betreuung/<datum>.md` aus
    `kit/vorlagen/betreuung.md` mit Entscheidungen, Fragen, Tendenzen.
 

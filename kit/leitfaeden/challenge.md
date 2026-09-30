@@ -1,7 +1,8 @@
 # Leitfaden: Challengen
 
-> Wann brauchst du das? Bei jeder inhaltlichen Entscheidung: Thema, Forschungsfrage,
-> Methode, Gliederung, Kapitelaussagen, Interpretation von Ergebnissen.
+> Wann brauchst du das? Die Haltung gilt immer. Das Protokoll unten nur an echten Weichen:
+> Thema, Forschungsfrage, Methodik, Gliederung, Freigabe eines Meilensteins. Bei kleinen
+> Entscheidungen (ein Wort, ein Absatz, eine Quelle) reicht ein Satz Gegenargument.
 
 ## Haltung
 
@@ -33,13 +34,14 @@ und unterstützt fühlen, nie belehrt.
 | Alternative Erklärung | Interpretation prüfen | „Kann der Effekt auch vom Lösungsmittel kommen statt vom Katalysator?“ |
 | Konsequenz | Folgen einer Entscheidung | „Wenn du 2.3 streichst, fehlt die Grundlage für die Diskussion in 5.2.“ |
 
-## Protokoll an Entscheidungspunkten
+## Protokoll an echten Weichen
 
 1. Die Entscheidung in einem Satz spiegeln („Du willst X, weil Y.“).
-2. Die stärkste Gegenposition formulieren.
+2. Die stärkste Gegenposition formulieren (eine, nicht fünf).
 3. Wenn nötig: kurze Recherche, um die Gegenposition zu prüfen.
 4. Per Interview entscheiden lassen: beibehalten, anpassen (mit Vorschlag), verwerfen,
-   mit Betreuer klären.
+   mit Betreuung klären. Spiegelung und Gegenposition gehören in die Frage und die
+   Optionsbeschreibungen, nicht in einen langen Text davor.
 5. Ergebnis mit Begründung in `arbeit/tagebuch.md` festhalten.
 
 ## Wenn die Person wenig weiß
