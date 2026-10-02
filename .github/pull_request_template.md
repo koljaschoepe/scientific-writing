@@ -12,14 +12,15 @@ Was ändert dieser PR?
 - [ ] Neuer Skill / Slash Command
 - [ ] Neuer Zitierstil
 - [ ] Dashboard
-- [ ] Werkzeug (kit/werkzeuge)
+- [ ] Werkzeug (.claude/kit/werkzeuge)
 - [ ] Fehlerbehebung
 - [ ] Dokumentation
 
 ## Checkliste
 
 - [ ] Läuft auf Windows und macOS (nur Node-Built-ins, Pfade über `path.join`)
-- [ ] `kit/SPEC.md`, `docs/` und bei Bedarf `kit/dashboard/API.md` aktualisiert
-- [ ] `node kit/werkzeuge/update.mjs manifest` ausgeführt
-- [ ] `AGENTS.md` + `CLAUDE.md` weiterhin unter 6.500 Zeichen
-- [ ] `arbeit/*.json`-Schema rückwärtskompatibel (oder Migration dokumentiert)
+- [ ] `.claude/kit/SPEC.md`, `.claude/kit/docs/` und bei Bedarf `.claude/kit/dashboard/API.md` aktualisiert
+- [ ] Regeln nur an ihrer Quelle geändert (Stil: `stilregeln.md`, Befehle: Skill-Frontmatter)
+- [ ] `node .claude/kit/werkzeuge/update.mjs manifest` ausgeführt
+- [ ] `AGENTS.md` + `.claude/CLAUDE.md` ohne HTML-Kommentare unter 4.500 Zeichen
+- [ ] Formate in `.arbeit/` (einstellungen.md, plan.md, zustand.json) rückwärtskompatibel oder Migration in `zustand.mjs init`

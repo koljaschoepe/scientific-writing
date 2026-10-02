@@ -1,0 +1,28 @@
+% Deckblatt. Alle Angaben kommen aus .arbeit/einstellungen.md (via kit-daten.tex).
+% Zeilen ohne Wert blendet pdf.mjs automatisch aus.
+\begin{titlepage}
+  \thispagestyle{empty}
+  \begin{center}
+    \ifkitLogo
+      \includegraphics[height=2.2cm,keepaspectratio]{\kitLogo}\par
+      \vspace{0.8cm}
+    \fi
+    {\large \kitHochschule\par}
+    \ifx\kitFakultaet\empty\else {\normalsize \kitFakultaet\par}\fi
+    \ifx\kitInstitut\empty\else {\normalsize \kitInstitut\par}\fi
+
+    \vspace{3.2cm}
+    {\normalsize\MakeUppercase{\kitTyp}\par}
+    \vspace{1.2cm}
+    {\LARGE\bfseries \kitTitel\par}
+    \ifx\kitUntertitel\empty\else
+      \vspace{0.5cm}{\large \kitUntertitel\par}
+    \fi
+
+    \vfill
+    \begin{tabular}{@{}rl@{}}
+      \kitDeckblattZeilen
+    \end{tabular}
+    \vspace{1.5cm}
+  \end{center}
+\end{titlepage}

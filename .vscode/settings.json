@@ -21,7 +21,7 @@
   "latex-workshop.message.error.show": false,
   "latex-workshop.message.warning.show": false,
 
-  "//ltex": "LTeX+ prüft Rechtschreibung und Grammatik nur in Markdown (deine Texte in arbeit/). LaTeX ist ausgenommen, weil latex/kapitel generiert und latex/vorlage Kit ist. Englische Arbeit: ltex.language in den Benutzereinstellungen auf en-US oder en-GB stellen. Fachbegriffe aus arbeit/begriffe.md kennt LTeX nicht automatisch: unterstrichenes Wort, Schnellkorrektur, zum Wörterbuch hinzufügen (landet in deinen Benutzereinstellungen und übersteht /update).",
+  "//ltex": "LTeX+ prüft Rechtschreibung und Grammatik nur in Markdown (deine Kapitel in kapitel/). LaTeX ist ausgenommen, weil .lokal/kapitel generiert und .claude/kit/latex Kit ist. Englische Arbeit: ltex.language in den Benutzereinstellungen auf en-US oder en-GB stellen. Fachbegriffe aus .arbeit/begriffe.md kennt LTeX nicht automatisch: unterstrichenes Wort, Schnellkorrektur, zum Wörterbuch hinzufügen (landet in deinen Benutzereinstellungen und übersteht /update).",
   "ltex.enabled": ["markdown"],
   "ltex.language": "de-DE",
   "ltex.additionalRules.motherTongue": "de-DE",
@@ -34,21 +34,33 @@
   "git.confirmSync": true,
   "git.openRepositoryInParentFolders": "never",
 
+  "//exclude": "Ausgeblendet ist alles Technische (Kit, Stand, Build). Sichtbar bleiben deine Arbeit: kapitel, quellen, daten, abbildungen, Arbeit.pdf, README.md. Wer am Kit arbeitet, hebt das in den Benutzereinstellungen auf (siehe CONTRIBUTING.md im Template-Repo).",
   "files.exclude": {
     "**/.git": true,
     "**/.DS_Store": true,
     "**/Thumbs.db": true,
     "**/node_modules": true,
     "**/__pycache__": true,
-    "code/.venv": true,
-    "latex/build": true,
-    ".lokal": true
+    "**/.venv": true,
+    "**/.gitkeep": true,
+    "**/*.bak": true,
+    ".claude": true,
+    ".arbeit": true,
+    ".lokal": true,
+    ".github": true,
+    ".vscode": true,
+    "kit": true,
+    ".mcp.json": true,
+    ".gitignore": true,
+    ".gitattributes": true,
+    "AGENTS.md": true,
+    "CONTRIBUTING.md": true,
+    "LICENSE": true,
+    "dashboard.html": true
   },
   "search.exclude": {
     ".lokal": true,
     "**/*.bak": true,
-    "latex/build": true,
-    "latex/kapitel": true,
     "quellen/pdfs": true,
     "dashboard.html": true
   },

@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "phase": "einrichtung",
+  "meilensteine": {
+    "einrichtung": {
+      "status": "aktiv",
+      "datum": null
+    },
+    "thema": {
+      "status": "offen",
+      "datum": null
+    },
+    "recherche": {
+      "status": "offen",
+      "datum": null
+    },
+    "expose": {
+      "status": "offen",
+      "datum": null
+    },
+    "gliederung": {
+      "status": "offen",
+      "datum": null
+    },
+    "schreiben": {
+      "status": "offen",
+      "datum": null
+    },
+    "pruefen": {
+      "status": "offen",
+      "datum": null
+    },
+    "abgabe": {
+      "status": "offen",
+      "datum": null
+    }
+  },
+  "kapitel": [],
+  "naechster_schritt": "Richte dein Projekt mit /start ein.",
+  "verlauf": []
+}

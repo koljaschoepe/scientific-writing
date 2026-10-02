@@ -1,0 +1,31 @@
+% Selbstständigkeitserklärung. Der Wortlaut ist ein allgemeiner Standard.
+% Viele Prüfungsordnungen schreiben einen eigenen Text vor: dann den Text
+% unter .arbeit/latex/eigene-erklaerung.tex ablegen, er ersetzt diesen automatisch.
+\IfFileExists{eigene-erklaerung.tex}{\input{eigene-erklaerung.tex}}{%
+\chapter*{\kitWortErklaerung}
+\addcontentsline{toc}{chapter}{\kitWortErklaerung}
+\thispagestyle{plain}
+\vspace{0.5cm}
+\ifkitEnglisch
+I hereby declare that I have written this \kitTyp{} independently and have used
+no sources or aids other than those indicated. All passages taken verbatim or in
+substance from published or unpublished works are marked as such. The use of
+generative AI tools is fully documented in the list of aids. This thesis has not
+been submitted in the same or a similar form to any other examination authority.
+\else
+Hiermit versichere ich, dass ich die vorliegende \kitTyp{} selbstständig verfasst
+und keine anderen als die angegebenen Quellen und Hilfsmittel benutzt habe. Alle
+Stellen, die wörtlich oder sinngemäß aus veröffentlichten oder nicht
+veröffentlichten Schriften entnommen wurden, sind als solche kenntlich gemacht.
+Die Nutzung generativer KI-Werkzeuge ist im Hilfsmittelverzeichnis vollständig
+dokumentiert. Die Arbeit hat in gleicher oder ähnlicher Form noch keiner anderen
+Prüfungsbehörde vorgelegen.
+\fi
+
+\vspace{2.5cm}
+\noindent\kitOrt\ifx\kitOrt\empty\else, \fi\kitAbgabe
+
+\vspace{2cm}
+\noindent\rule{7cm}{0.4pt}\\
+\kitAutor
+}

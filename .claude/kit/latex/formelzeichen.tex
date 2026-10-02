@@ -1,0 +1,13 @@
+% Formelzeichen- und Symbolverzeichnis. Einträge generiert pdf.mjs aus
+% .arbeit/begriffe.md (Tabelle mit Spalte "Symbol").
+\chapter*{\kitWortFormelzeichen}
+\addcontentsline{toc}{chapter}{\kitWortFormelzeichen}
+\thispagestyle{plain}
+\begin{longtable}{@{}p{2.5cm}p{\dimexpr\linewidth-5.5cm-4\tabcolsep\relax}p{3cm}@{}}
+  \textbf{\kitWortSymbol} & \textbf{\kitWortBedeutung} & \textbf{\kitWortEinheit}\\
+  \midrule
+  \endhead
+  \input{formelzeichen-inhalt}
+\end{longtable}
+% longtable ohne Beschriftung zählt sonst den Tabellenzähler mit hoch.
+\addtocounter{table}{-1}

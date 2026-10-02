@@ -1,6 +1,6 @@
 ---
 name: start
-description: Richtet das Projekt per Interview ein (Arbeit, Person, Fristen, KI-Regeln, Format, Werkzeuge) oder ändert bestehende Einstellungen.
+description: Richtet das Projekt per Interview ein (Arbeit, Person, Zeit und Umfang, KI-Regeln, Format, Werkzeuge) und legt Meilensteine an, später auch zum Ändern der Einstellungen.
 argument-hint: "[bereich, z. B. fristen]"
 disable-model-invocation: true
 gruppe: arbeit
@@ -8,199 +8,84 @@ gruppe: arbeit
 
 # /start: Projekt einrichten
 
-**Wichtig:** Jede Frage über das Rückfrage-Tool (in Claude Code: AskUserQuestion), bis zu 4
-Fragen je Runde. „Später klären“ wird als leerer String gespeichert. Relative Daten immer in
-echte Daten umrechnen. Nie Passwörter tippen. Zustand nur über `zustand.mjs`.
+**Wichtig:** Jede Frage über das Rückfrage-Tool, bis zu 4 Fragen je Runde. „Später klären“
+bleibt als leerer Wert stehen. Relative Daten in echte Daten umrechnen (heutiges Datum aus dem
+Kontext). Nie Passwörter tippen. Werte nur in `.arbeit/einstellungen.md`: einzelne mit
+`zustand.mjs einstellung <abschnitt.schluessel> <wert>`, bei der Ersteinrichtung die Datei in einem
+Zug bearbeiten (nur hinter den Doppelpunkten, Kommentare bleiben). Zustand nur über
+`zustand.mjs`. Endausgabe laut `AGENTS.md`.
 
-## Wann
-
-- Erster Start: `arbeit/projekt.json → eingerichtet` ist `false` oder die Datei fehlt.
-- Später: Einstellungen ändern (Fristen, Zitierstil, Schreibmodus, Betreuung ...).
-  Ein Argument wie `/start fristen` springt direkt zum Bereich.
+Argument: `$ARGUMENTS`
 
 ## Kontext laden
 
-1. `node kit/werkzeuge/zustand.mjs init` (legt fehlende Dateien aus `kit/vorlagen/arbeit/` an).
-2. `arbeit/projekt.json`, `arbeit/zustand.json`, `arbeit/plan.json` lesen.
-3. `kit/leitfaeden/interview.md` beachten.
+1. `node .claude/kit/werkzeuge/zustand.mjs init` (legt fehlende Dateien aus den Vorlagen an).
+2. `.arbeit/einstellungen.md` und `.arbeit/plan.md` lesen.
+3. `.claude/kit/leitfaeden/interview.md` beachten.
 
-## Ablauf bei bestehender Einrichtung
+Die Runden stehen in eigenen Dateien. Lies immer nur die Runde, die gerade dran ist:
 
-Wenn `eingerichtet: true` und kein Argument: ein Interview „Was möchtest du ändern?“
-(header „Ändern“, multiSelect true) mit den Optionen:
-- „Fristen und Termine“: Runde 3
-- „Arbeit und Thema“: Runden 1 und 4
-- „Format und Zitierstil“: Runde 5
-- „Werkzeuge und Systemcheck“: Runde 6
+| Runde | Datei | Inhalt |
+| --- | --- | --- |
+| 1 | `runden/1-arbeit.md` | Arbeitstyp, Fach, Sprache, Methodik |
+| 2 | `runden/2-person.md` | Name, Hochschule, Institut, E-Mail |
+| 3 | `runden/3-zeit.md` | Beginn, Abgabe, Betreuung, Termine, Seitenbereich |
+| 4 | `runden/4-thema.md` | Thema, KI-Regeln, Schreibmodus |
+| 5 | `runden/5-format.md` | Zitierstil, Vorlage, Verzeichnisse, Logo |
+| 6 | `runden/6-werkzeuge.md` | Code, Zotero, Bibliothek, Reparatur |
 
-Nur die gewählten Runden durchlaufen, danach speichern und Abschluss wie unten.
-Weitere Bereiche (Name, Betreuung, KI-Regeln, Schreibmodus) erreicht die Person über Freitext.
+## Schon eingerichtet
 
-## Ablauf bei Ersteinrichtung
+`- eingerichtet: ja` und kein Argument: Interview „Was möchtest du ändern?“ (header „Ändern“,
+multiSelect): „Umfang, Fristen, Termine“ (Runde 3), „Arbeit, Thema, KI-Regeln“ (1 und 4),
+„Format und Zitierstil“ (5), „Werkzeuge und Systemcheck“ (6). In der Beschreibung erwähnen:
+Alles andere ändert sie direkt in `.arbeit/einstellungen.md` (Klick im Dashboard) oder sagt
+es einfach. Ein Argument (`/start fristen`) springt direkt zur passenden Runde. Danach
+speichern wie unten, nur die geänderten Werte.
 
-### Begrüßung (einziger Text ohne Interview)
+## Ersteinrichtung
 
-„Hallo! Ich bin dein Begleiter für die ganze Arbeit, von der Themenfindung bis zum PDF.
-Ich stelle dir jetzt ein paar Fragen, meistens zum Anklicken. Das dauert etwa 10 Minuten.
-Wenn du etwas nicht weißt, wähl einfach ‚Später klären‘. Nichts davon ist endgültig.“
+**Begrüßung** (einziger Text ohne Interview): „Hallo! Ich begleite dich durch die ganze
+Arbeit, von der Themenfindung bis zum PDF. Ich stelle dir jetzt ein paar Fragen, meistens zum
+Anklicken. Das dauert etwa 10 Minuten. Wenn du etwas nicht weißt, wähl ‚Später klären‘.
+Nichts davon ist endgültig.“
 
-Vor der ersten Frage still den Systemcheck laufen lassen: `node kit/werkzeuge/check.mjs --json`
-(falls vorhanden). Ergebnis erst in der Zusammenfassung verwenden.
-
-### Runde 1: Die Arbeit (4 Fragen)
-
-1. „Was für eine Arbeit schreibst du?“ header „Arbeitstyp“
-   - „Diplomarbeit“: meist 60 bis 100 Seiten, z. B. Chemie, Ingenieurwesen
-   - „Masterarbeit“: meist 50 bis 100 Seiten
-   - „Bachelorarbeit“: meist 30 bis 60 Seiten
-   - „Kleinere Arbeit“: Seminar-, Haus-, Projektarbeit (Folgefrage, welche)
-   Dissertation über Freitext.
-2. „In welchem Fach?“ header „Fach“ → `fachprofil`
-   - „Naturwissenschaft“: Chemie, Physik, Biologie, Pharmazie
-   - „Technik/Informatik“: Informatik, Ingenieurwesen, Data Science
-   - „Wirtschaft/Sozial“: BWL, VWL, Psychologie, Soziologie
-   - „Geisteswissenschaft“: Geschichte, Philosophie, Literatur, Sprachen
-   Das konkrete Fach (z. B. „Chemie“) in einer Folgefrage oder aus dem Freitext → `fachgebiet`.
-3. „In welcher Sprache schreibst du die Arbeit?“ header „Sprache“
-   - „Deutsch“ / „Englisch“ / „Noch offen“ (Hinweis: in der Chemie oft Englisch, mit Betreuung klären)
-   Die Bedienung bleibt immer deutsch.
-4. „Wie arbeitest du hauptsächlich?“ header „Methodik“, Optionen passend zum Fachprofil:
-   - Naturwissenschaft: „Experimentell (Labor)“, „Computational (Modelle, Simulation, KI)“,
-     „Beides“, „Literaturarbeit“
-   - Wirtschaft/Sozial: „Literatur/Konzept“, „Empirisch qualitativ“, „Empirisch quantitativ“, „Gemischt“
-   - andere: sinnvoll analog
-   → `methodik` (experimentell, computational, gemischt, literatur, empirisch-qualitativ, empirisch-quantitativ)
-
-### Runde 2: Du und deine Hochschule (4 Fragen)
-
-1. „Wie heißt du?“ header „Name“: „Aus Git übernehmen“ (`git config user.name`), „Später klären“.
-2. „An welcher Hochschule?“ header „Hochschule“: Hinweisoptionen „z. B. TU Dresden“,
-   „Später klären“. Name über Freitext. Ort ableiten, wenn eindeutig.
-3. „Welche Fakultät bzw. welches Institut?“ header „Institut“: „z. B. Fakultät Chemie und
-   Lebensmittelchemie“, „Später klären“.
-4. „Deine E-Mail-Adresse?“ header „E-Mail“: „Aus Git übernehmen“ (`git config user.email`),
-   „Später klären“. Begründung in der Beschreibung: wird für Literaturdatenbanken gebraucht
-   (höfliche Anfragen) und steht auf dem Deckblatt nur, wenn du willst.
-
-Matrikelnummer und Studiengang: im Freitext oder später über `/start`, nicht aktiv abfragen,
-wenn die Person es eilig hat.
-
-### Runde 3: Zeit und Betreuung (bis 4 Fragen)
-
-Rechne relative Angaben in echte Daten um (heutiges Datum per `node -e "console.log(new Date().toISOString().slice(0,10))"`).
-
-1. „Wann hast du angefangen bzw. fängst du an?“ header „Beginn“: „Heute“, „Vor 1 Monat“,
-   „z. B. 2026-11-01“, „Später klären“.
-2. „Wann ist die Abgabe?“ header „Abgabe“: „In 6 Monaten (<Datum>)“, „In 9 Monaten (<Datum>)“,
-   „z. B. 2027-04-30“, „Später klären“. Diplom- und Masterarbeiten haben meist eine feste
-   Bearbeitungszeit laut Prüfungsordnung: in der Beschreibung erwähnen.
-3. „Wer betreut dich?“ header „Betreuung“: „z. B. Dr. Müller (Betreuer), Prof. Schmidt
-   (Gutachter)“, „Später klären“.
-4. „Gibt es schon einen Termin mit deiner Betreuung?“ header „Termin“: „z. B. 2026-10-15“,
-   „Noch keiner“, „Regelmäßig (z. B. alle 2 Wochen)“.
-   Termine als `art: betreuung` in `arbeit/plan.json` eintragen, Abgabe zusätzlich als
-   `art: frist`.
-
-### Runde 4: Thema, KI-Regeln, Schreibmodus, Umfang (4 Fragen)
-
-1. „Wie weit ist dein Thema?“ header „Thema“
-   - „Vorgegeben von der Arbeitsgruppe“: wir schärfen es
-   - „Grob umrissen“: wir machen daraus eine Forschungsfrage
-   - „Noch offen“: wir finden gemeinsam eins
-   Freitext: Arbeitstitel oder Stichworte. In `arbeit/thema/thema.md` notieren (Abschnitt „Ausgangslage“).
-2. „Was erlaubt deine Prüfungsordnung bzw. deine Betreuung beim Einsatz von KI?“ header „KI-Regeln“
-   - „Erlaubt, muss angegeben werden“: → `erlaubt-mit-deklaration`
-   - „Nur eingeschränkt“ (z. B. keine Textentwürfe): → `eingeschraenkt`
-   - „Weiß ich nicht“: → `unbekannt`, kommt auf die Liste für das erste Betreuungsgespräch
-   - „Verboten“: → `verboten`
-   Beschreibung ehrlich: „Du unterschreibst am Ende, dass du die Arbeit selbstständig verfasst
-   hast. Deshalb protokolliere ich jede KI-Nutzung für dein Hilfsmittelverzeichnis.“
-3. „Wie sollen wir beim Schreiben zusammenarbeiten?“ header „Schreiben“
-   - „Claude schreibt Entwürfe, ich überarbeite (Empfohlen)“: `claude-schreibt`
-   - „Gemeinsam: ich schreibe, Claude überarbeitet“: `gemeinsam`
-   - „Claude berät nur, ich schreibe selbst“: `coach`
-   Wenn KI-Regeln `eingeschraenkt` oder `verboten`: `coach` empfehlen und das in der
-   Beschreibung begründen. Die Entscheidung bleibt bei der Person.
-4. „Wie lang soll die Arbeit werden?“ header „Umfang“: Optionen nach Arbeitstyp, z. B.
-   Diplomarbeit „60 bis 80 Seiten“, „80 bis 100 Seiten“, „Vorgabe kenne ich nicht“.
-   Setze `seiten.min/max`, `woerter_ziel` = Mittelwert × 280 (nur Fließtext, ohne Verzeichnisse
-   und Anhang; bei Naturwissenschaft × 230, weil Abbildungen Platz brauchen).
-
-### Runde 5: Format (bis 4 Fragen)
-
-1. „Welcher Zitierstil?“ header „Zitierstil“, Optionen nach Fachprofil:
-   - Naturwissenschaft: „ACS (Empfohlen)“ `chem-acs`, „RSC“ `chem-rsc`,
-     „Angewandte Chemie“ `chem-angew`, „Vorgabe der Gruppe“ (Freitext)
-   - Technik/Informatik: „IEEE (Empfohlen)“, „Autor-Jahr“ `authoryear`, „APA“
-   - Wirtschaft/Sozial: „Harvard mit vgl. (Empfohlen)“ `harvard-de`, „APA 7“ `apa`
-   - Geistes: „Chicago“, „Autor-Jahr“, „Vorgabe“
-2. „Gibt es eine Vorlage oder ein Merkblatt für das Layout?“ header „Vorlage“
-   - „Nein, nimm die Standardvorlage (Empfohlen)“: `koma`, schlicht und hochschulneutral
-   - „Ja, ein Merkblatt als PDF“: Person legt es nach `quellen/eingang/` (oder nennt den Pfad),
-     du liest es und überträgst Ränder, Schrift, Zeilenabstand, Pflichtbestandteile.
-     Werte danach per Interview bestätigen lassen. Stehen im Merkblatt Bewertungskriterien,
-     diese nach `arbeit/betreuung/bewertung.md` übertragen.
-   - „Ja, eine LaTeX-Vorlage der Arbeitsgruppe“: Person legt sie nach `quellen/eingang/`.
-     Ehrlich sagen: Das Kit baut mit `koma` oder `tudscr`. Claude überträgt Ränder, Schrift und
-     Pakete nach `projekt.json` und `latex/eigene-praeambel.tex` (Empfohlen) oder baut auf
-     Wunsch später eine eigene Vorlage unter `latex/vorlage-eigen/` (siehe `/pdf`).
-   - „TU-Dresden-Klasse tudscr“: `tudscr`, Hinweis: nutzt noch das alte Corporate Design (Stand 2026-09)
-3. „Sollen Deckblatt und Verzeichnisse wie üblich angelegt werden?“ header „Verzeichnisse“
-   - „Ja, Standard (Empfohlen)“: Abbildungen, Tabellen, Abkürzungen, Hilfsmittel, Abstract,
-     Zusammenfassung, Erklärung
-   - „Ich wähle selbst“: Folgefrage mit multiSelect
-4. „Hast du ein Logo deiner Hochschule für das Deckblatt?“ header „Logo“
-   - „Später“ / „Ja, lege ich nach abbildungen/logo.png“ / „Kein Logo“
-
-### Runde 6: Werkzeuge (bis 4 Fragen, nur relevante)
-
-1. Nur wenn `methodik` computational, gemischt oder empirisch-quantitativ:
-   „Gehört Programmieren oder Datenauswertung zu deiner Arbeit?“ header „Code“
-   - „Ja, richte es ein (Empfohlen)“: `uv init code` im Projekt, danach `uv add numpy pandas matplotlib`
-     (Chemie zusätzlich `rdkit`, bei ML `scikit-learn`). Erklären: „Du musst nichts über
-     Python wissen, ich übernehme das.“
-   - „Später“ / „Nein“
-2. „Nutzt du Zotero für Literatur?“ header „Zotero“
-   - „Nein, Claude verwaltet die Quellen (Empfohlen)“ / „Ja“ (dann `werkzeuge.zotero: true`
-     und Anleitung aus `kit/leitfaeden/recherche.md`, Abschnitt Zotero: Better BibTeX exportiert
-     direkt nach `quellen/literatur.bib` oder per `node kit/werkzeuge/bib.mjs import <datei>`)
-3. „Soll ich dir den Browser-Zugang zur Bibliothek einrichten?“ header „Bibliothek“
-   - „Ja, jetzt (Empfohlen)“: Playwright öffnet die Anmeldeseite der Bibliothek (bei TU Dresden
-     `https://katalog.slub-dresden.de`, Login über ZIH/Shibboleth). Person meldet sich selbst an.
-     Du tippst nie Passwörter.
-   - „Später“: kommt bei der ersten Recherche
-4. Nur wenn der Systemcheck Probleme meldet: „Einige Programme fehlen noch (<Liste in Klartext>).
-   Soll ich sie jetzt reparieren?“ header „Reparieren“: „Ja (Empfohlen)“, „Später mit /hilfe“.
+Vor der ersten Frage still `node .claude/kit/werkzeuge/check.mjs --json`. Ergebnis erst in
+Runde 6 und in der Zusammenfassung verwenden. Dann Runde 1 bis 6 nacheinander.
 
 ## Speichern
 
-1. `arbeit/projekt.json` mit allen Antworten schreiben. „Später klären“ als leerer String.
-   `eingerichtet: true`.
-2. `arbeit/plan.json`: Abgabe und Termine.
-3. `arbeit/thema/thema.md` mit Abschnitt „Ausgangslage“ (Lage, Stichworte, Datum).
-4. `arbeit/hilfsmittel.md`: erste Zeile „Claude Code, Einrichtung des Projekts“ mit Datum
-   und Modell.
-5. `arbeit/tagebuch.md`: Eintrag „Projekt eingerichtet“ mit den wichtigsten Entscheidungen.
-6. Offene Punkte für die Betreuung (z. B. KI-Regeln unbekannt, Sprache offen) nach
-   `arbeit/betreuung/offene-fragen.md`.
+1. `.arbeit/einstellungen.md`: alle Antworten, zuletzt `eingerichtet: ja`. `arbeit.titel` nie
+   leer lassen (notfalls vorläufig), sonst gilt das Projekt als nicht eingerichtet.
+2. `.arbeit/plan.md`, Format `- YYYY-MM-DD · Text · kapitel: … · status: …` bzw. Termine
+   `- YYYY-MM-DD HH:MM · Text`. Termine aus Runde 3. Meilensteine rückwärts von
+   `arbeit.abgabe`, nach Bestätigung per Interview:
+   - Abgabe minus 2 Wochen: „Abgabefertig“ · kapitel: alle · status: final
+   - minus 4 Wochen: „Alle Kapitel geprüft“ · kapitel: alle · status: geprueft
+   - minus 8 Wochen (bei Seminar- und Hausarbeit minus 2): „Rohfassung“ · kapitel: alle · status: entwurf
+   - dazwischen Exposé und Gliederung als Termine ohne Kapitel, wenn die Zeit es hergibt
+   Kapitelgenaue Meilensteine kommen in der Phase Gliederung dazu.
+3. `.arbeit/thema/thema.md` mit Abschnitt „Ausgangslage“ (Lage, Stichworte, Datum).
+4. `.arbeit/hilfsmittel.md`: erste Zeile „Claude Code, Einrichtung des Projekts“ mit Datum.
+5. `.arbeit/tagebuch.md`: „Projekt eingerichtet“ mit den wichtigsten Entscheidungen.
+6. Offenes für die Betreuung (KI-Regeln unbekannt, Sprache offen) nach
+   `.arbeit/betreuung/offene-fragen.md`.
 7. Zustand:
    ```
-   node kit/werkzeuge/zustand.mjs phase thema
-   node kit/werkzeuge/zustand.mjs verlauf "Projekt eingerichtet"
-   node kit/werkzeuge/zustand.mjs naechster "Thema schärfen mit /weiter"
+   node .claude/kit/werkzeuge/zustand.mjs phase thema
+   node .claude/kit/werkzeuge/zustand.mjs verlauf "Projekt eingerichtet"
+   node .claude/kit/werkzeuge/zustand.mjs naechster "Thema schärfen mit /weiter"
    ```
 
 ## Ausgabe
 
-Endausgabe laut `AGENTS.md`, keine Tabelle (alles steht im Dashboard und in `arbeit/projekt.json`):
-- Satz: „Eingerichtet: <Arbeitstyp> in <Fach>, Abgabe in <n> Tagen (<Datum>).“
-- Höchstens drei Stichpunkte: offene Punkte für die Betreuung, Systemcheck in Klartext,
-  Hinweis auf das Dashboard.
-- `Geändert:` mit Links zu `arbeit/projekt.json`, `arbeit/plan.json`, `arbeit/thema/thema.md`.
+Endausgabe laut `AGENTS.md`, keine Tabelle:
+- „Eingerichtet: <Arbeitstyp> in <Fach>, <Seiten> Seiten, Abgabe in <n> Tagen (<Datum>).“
+- Höchstens drei Stichpunkte: Offenes für die Betreuung, Systemcheck in Klartext, Hinweis,
+  dass alle Einstellungen lesbar in `.arbeit/einstellungen.md` stehen.
+- `Geändert:` mit Links zu `.arbeit/einstellungen.md`, `.arbeit/plan.md`, `.arbeit/thema/thema.md`.
 
-## Abschluss-Interview
-
-„Wie möchtest du weitermachen?“ header „Weiter“
-- „Mit dem Thema starten (Empfohlen)“: `.claude/skills/weiter/SKILL.md` lesen und befolgen (Phase thema)
-- „Erst das Dashboard ansehen“: `node kit/dashboard/server.mjs --starten`, Link nennen
-- „Ich schaue mir das später an“: Hinweis, dass `/weiter` jederzeit fortsetzt, `/sync` sichert
+Interview „Wie möchtest du weitermachen?“ header „Weiter“:
+- „Mit dem Thema starten (Empfohlen)“: `weiter`-Skill (Phase thema)
+- „Erst das Dashboard ansehen“: `node .claude/kit/dashboard/server.mjs --starten`, Link nennen
+- „Später“: `/weiter` setzt jederzeit fort, `/sync` sichert

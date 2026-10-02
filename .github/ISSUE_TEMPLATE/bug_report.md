@@ -23,8 +23,8 @@ Was hättest du erwartet?
 ## Umgebung
 
 - Betriebssystem: [z. B. Windows 11, macOS 15]
-- Kit-Version: [Inhalt von kit/VERSION]
-- Ausgabe von `node kit/werkzeuge/check.mjs`:
+- Kit-Version: [Inhalt von .claude/kit/VERSION]
+- Ausgabe von `node .claude/kit/werkzeuge/check.mjs`:
 
 ## Fehlermeldung
 

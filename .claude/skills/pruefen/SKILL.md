@@ -1,88 +1,86 @@
 ---
 name: pruefen
-description: Prüft Kapitel oder Arbeit auf Sprache, Zitattreue, Argumentation mit Notenschätzung und Fachliches, Final-Gate.
-when_to_use: Kapitel prüfen, bewerten, gegenlesen, nach einem Hauptkapitel, vor der Abgabe.
+description: Prüft ein Kapitel oder die Arbeit wie eine Gutachterin (Zitattreue, Argumentation mit Note, Sprache, Fach, Umfang). Ändert erst nach Zustimmung.
+when_to_use: „Prüf 2.1“, „welche Note wäre das?“, „stimmen meine Zitate?“, nach einem Hauptkapitel, vor der Abgabe. Nicht für direkte Verbesserungen (schreiben).
 argument-hint: "[nr | hauptkapitel | alles | final]"
 gruppe: arbeit
 ---
 
 # /pruefen: Qualität sichern
 
-**Wichtig:** Prüfer vergleichen mit dem Original, nie mit der Paraphrase. Umfang ±10 %.
-Nach umgesetzten Korrekturen Status `geprueft` bleibt, `final` erst nach Freigabe der Person
-hier. Bei Claude Pro höchstens zwei Prüfer gleichzeitig. Endausgabe laut `AGENTS.md`.
+**Wichtig:** Prüfer vergleichen mit dem Original, nie mit der Paraphrase. Jeder Prüfer schreibt
+seine Fundliste selbst und gibt nur eine Zeile zurück. Kapiteltext und Fundtabellen liest das
+Hauptgespräch nicht. Status: nach der Prüfung `geprueft`, `final` nur danach und nur mit
+Zustimmung der Person. Endausgabe laut `AGENTS.md`.
 
 Argument: `$ARGUMENTS`: Kapitelnummer (`2.1`), Hauptkapitel (`2`), `alles` oder `final`.
+Bei `final`: `pruefen/final.md` lesen und befolgen, hier aufhören.
 
 ## Kontext laden
 
-- `arbeit/zustand.json` (Kapitel, Status, `woerter_ziel`), Wortstand über
-  `node kit/werkzeuge/stand.mjs`
-- Die Kapiteldateien aus `kapitel[].datei` liest nur der jeweilige Prüfer, nicht das Hauptgespräch.
+`node .claude/kit/werkzeuge/zustand.mjs zeige` (Kapitel, Status, Seiten Ist/Ziel),
+`.arbeit/einstellungen.md` (Fachprofil, `technik.abo`). Prüfbar sind Kapitel ab `entwurf`.
 
-## Umfang wählen
+## Umfang und Prüfer wählen
 
-Ohne Argument Interview „Was soll ich prüfen?“ header „Umfang“: „<letztes Kapitel im
-Status entwurf oder geprueft> (Empfohlen)“, „Ganzes Hauptkapitel <n>“, „Die ganze Arbeit“
-(bei Claude Pro teuer, Kapitel einzeln ist sparsamer), „Final-Gate vor der Abgabe“.
-Dann „Welche Prüfungen?“ header „Prüfer“, multiSelect: „Alle vier (Empfohlen)“, „Sprache“,
-„Zitattreue“, „Argumentation und Note“.
+Ohne Argument Interview „Was soll ich prüfen?“ header „Umfang“: „<letztes Kapitel im Status
+entwurf> (Empfohlen)“, „Ganzes Hauptkapitel <n>“, „Die ganze Arbeit“ (teuer, Kapitel einzeln
+ist sparsamer), „Abgabe-Check“ (final).
+
+Dann „Welche Prüfungen?“ header „Prüfer“, multiSelect. Empfohlen sind Zitattreue,
+Argumentation und Sprache, Fachliches nur bei Fachprofil Naturwissenschaft oder Technik in
+Methoden-, Ergebnis- und Diskussionskapiteln:
+„Zitattreue (Empfohlen)“, „Argumentation und Note (Empfohlen)“, „Sprache (Empfohlen)“,
+„Fachliches“ (dort mit „(Empfohlen)“, wo es passt).
 
 ## Prüfen
 
-Je Kapitel die gewählten Subagents `pruefer-sprache`, `pruefer-zitate`,
-`pruefer-argumentation`, `pruefer-fach`. Im Auftrag mitgeben: Kapitelnummer, Dateipfad,
-Sprache, Fachprofil, Zitierstil. Ergebnisse nach `arbeit/pruefung/pruefung-<nr>.md`:
+Je Kapitel die gewählten Subagents `pruefer-zitate`, `pruefer-argumentation`,
+`pruefer-sprache`, `pruefer-fach`. Auftrag: Kapitelnummer, Dateipfad, Seiten Ist/Ziel. Bei
+`technik.abo: pro` höchstens zwei gleichzeitig. Jeder schreibt
+`.arbeit/pruefung/pruefung-<nr>-<zitate|argumentation|sprache|fach>.md` und antwortet mit
+einer Zeile.
+
+Aus den Zeilen die Sammeldatei `.arbeit/pruefung/pruefung-<nr>.md` schreiben, ohne die
+Einzeldateien zu lesen:
 
 ```markdown
 # Prüfung <nr> · <YYYY-MM-DD>
 
 Notenschätzung: <Argumentation> · Sprache <x> · Fach <y>
 Funde: hoch <a>, mittel <b>, niedrig <c>
-Umfang: <Ist> von <Soll> Wörtern (<+/-%>)
+Umfang: <Ist> von <Ziel> Seiten (<+/-%>)
 
 ## Die drei wichtigsten Punkte
 1. ...
 
-## Sprache | Zitate | Argumentation | Fach
-<Tabellen der Prüfer>
+## Einzelberichte
+- [Zitate](pruefung-<nr>-zitate.md) · [Argumentation](...) · [Sprache](...) · [Fach](...)
 ```
 
-`node kit/werkzeuge/zustand.mjs kapitel <nr> <status> --note <x> --offen <n>` (Status bleibt).
+`node .claude/kit/werkzeuge/zustand.mjs kapitel <nr> geprueft --note <x> --offen <n>`
 
 ## Umfang und Kürzen
 
-Über 10 % über Budget: Kürzungsplan in die Prüfdatei (je Absatz streichen, zusammenfassen,
-Anhang, behalten, mit Ersparnis). Redundanzen zwischen Kapiteln zuerst. Über 10 % darunter:
-Stellen nennen, die Tiefe brauchen.
+Mehr als 10 % über dem Seitenziel: Kürzungsplan in die Sammeldatei (je Absatz streichen,
+zusammenfassen, Anhang, behalten, mit Ersparnis in Seiten), Redundanzen zwischen Kapiteln
+zuerst. Mehr als 10 % darunter: Stellen nennen, die Tiefe brauchen.
 
 ## Ergebnis besprechen
 
-Endausgabe laut `AGENTS.md`: Satz mit Note und Fundzahl, die drei wichtigsten Punkte als
-Stichpunkte, `Geändert:` mit Link zur Prüfdatei. Keine Fundtabellen im Chat, die stehen in
-der Datei. Interview „Was soll ich umsetzen?“ header „Korrekturen“: „Alle hohen und
-mittleren (Empfohlen)“, „Nur hohe“, „Einzeln durchgehen“, „Nichts, nur merken“.
+Endausgabe laut `AGENTS.md`: Satz mit Note und Fundzahl, die drei wichtigsten Punkte,
+`Geändert:` mit Link zur Sammeldatei. Interview „Was soll ich umsetzen?“ header „Korrekturen“:
+„Alle hohen und mittleren (Empfohlen)“, „Nur hohe“, „Einzeln durchgehen“, „Nichts, nur merken“.
 
-Umsetzen mit Subagent `autor` (Modus `ueberarbeiten` bzw. `kuerzen`), geänderte Stellen vom
-jeweiligen Prüfer nachkontrollieren lassen (nur die Funde). Dann Freigabe-Interview
-„<nr> jetzt final?“: „Final (Empfohlen)“ → `zustand.mjs freigeben <nr>`, „Noch
-überarbeiten“, „Später“ (bleibt `geprueft`).
-
-## Final-Gate (`final`)
-
-- Kein `[BELEG FEHLT]`, kein `TODO`, keine leeren Kapitel.
-- Jede Behauptung belegt oder eigenes Ergebnis, jede Abbildung und Tabelle im Text erwähnt.
-- Zahlen im Text stimmen mit Tabellen und Daten, Zählwörter stimmen.
-- Forschungsfrage im Fazit ausdrücklich beantwortet.
-- Umfang ±10 %, alle Kapitel `final`.
-- `node kit/werkzeuge/bib.mjs check` fehlerfrei, jede zitierte Quelle in der bib.
-- Begriffe einheitlich, Abkürzungen in `arbeit/begriffe.md`, Hilfsmittelprotokoll vollständig.
-Ampel je Punkt nach `arbeit/pruefung/final.md`. Rot blockiert die Empfehlung zur Abgabe.
+Umsetzen mit Subagent `autor` (Modus `ueberarbeiten` bzw. `kuerzen`, Pfade der Prüfdateien im
+Auftrag). Danach denselben Prüfer nur die betroffenen Funde nachkontrollieren lassen. Dann
+Interview „<nr> jetzt final?“: „Final (Empfohlen)“ → `zustand.mjs freigeben <nr>`,
+„Noch überarbeiten“, „Später“ (bleibt `geprueft`).
 
 ## Protokoll
 
-`node kit/werkzeuge/zustand.mjs verlauf "Prüfung <nr>: Note ~<x>, <n> Funde umgesetzt"`,
-`arbeit/hilfsmittel.md`: „Prüfung und Überarbeitung mit Claude Code“.
+`node .claude/kit/werkzeuge/zustand.mjs verlauf "Prüfung <nr>: Note ~<x>, <n> Funde umgesetzt"`,
+`.arbeit/hilfsmittel.md`: „Prüfung und Überarbeitung mit Claude Code“.
 
 ## Abschluss-Interview
 

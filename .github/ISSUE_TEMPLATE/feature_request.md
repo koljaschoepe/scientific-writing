@@ -16,14 +16,14 @@ Warum wäre das nützlich? Welches Problem löst es?
 
 ## Mögliche Umsetzung
 
-Hast du eine Idee wie es umgesetzt werden könnte?
+Hast du eine Idee, wie es umgesetzt werden könnte?
 
 ## Betroffene Komponenten
 
 - [ ] Agent (welcher?)
 - [ ] Skill / Slash Command (welcher?)
-- [ ] Konfiguration (arbeit/projekt.json)
-- [ ] Guide / Vorlage
+- [ ] Einstellungen (.arbeit/einstellungen.md)
+- [ ] Leitfaden / Vorlage
 - [ ] LaTeX / PDF-Export
 - [ ] Dokumentation
 - [ ] Sonstiges

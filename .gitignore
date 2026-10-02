@@ -3,12 +3,10 @@
 
 # Generiert, wird bei jedem Lauf neu erzeugt
 dashboard.html
-latex/build/
-latex/kapitel/
-Vorschau.pdf
+Arbeit-neu.pdf
 Arbeit-neu.docx
 
-# Gerätelokale Laufzeitdaten (Dashboard-Journal, Aktivität, Schnappschüsse, letzter Sync)
+# Gerätelokal (Dashboard-Journal, Schnappschüsse, letzter Sync, LaTeX-Build in .lokal/build/)
 .lokal/
 
 # Betriebssystem
@@ -18,15 +16,11 @@ desktop.ini
 *~
 
 # Code-Teil (uv legt die Umgebung selbst neu an)
-code/.venv/
 .venv/
 __pycache__/
 *.pyc
 .ipynb_checkpoints/
 node_modules/
-
-# Protokolle der Installation
-install/*.log
 
 # Persönliche Claude-Einstellungen dieses Rechners
 .claude/settings.local.json
@@ -41,8 +35,6 @@ install/*.log
 # Das Arbeits-Repo ist privat, die PDFs sind Teil deiner Arbeit und sollen mit /sync
 # gesichert werden. Einzelne Dateien über 95 MB meldet /sync (GitHub-Grenze 100 MB).
 # Wer das Kit öffentlich teilt, trägt hier "quellen/pdfs/*.pdf" ein (Urheberrecht).
-latex/build-expose/
-Arbeit-neu.pdf
 *.aux
 *.bcf
 *.run.xml
